@@ -1,0 +1,102 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Generate Technical Architecture from PRD
+
+This rule guides the process of creating a technical architecture document in Markdown format based on a provided Product Requirements Document (PRD). The goal is to translate product requirements into a concrete technical plan.
+
+## Process:
+
+1.  **Identify the PRD:** Locate the relevant Product Requirements Document (PRD) file within the project. Ask the user to specify the PRD file if it's not immediately clear.
+2.  **Analyze Requirements:** Carefully read and understand the requirements outlined in the PRD. Pay close attention to:
+    *   Functional requirements (what the system should do).
+    *   Non-functional requirements (performance, scalability, security, etc.).
+    *   User stories or use cases.
+    *   Data requirements (what information needs to be stored/processed).
+    *   External integrations or dependencies.
+3.  **Define High-Level Architecture:** Based on the requirements, propose a high-level architecture. Consider common architectural patterns (e.g., Monolith, Microservices, Client-Server, Event-Driven). Briefly justify the chosen pattern.
+4.  **Identify Key Components:** Break down the system into logical components (e.g., Frontend UI, Backend API, Database, Authentication Service, Notification Service). Describe the responsibilities of each component.
+5.  **Design Data Flows:** Illustrate how data moves through the system for key user flows or processes identified in the PRD. Describe the sequence of interactions between components. Diagrams (e.g., sequence diagrams using Mermaid syntax) can be helpful here.
+6.  **Specify APIs:** Define the essential API endpoints needed for communication between components (especially between frontend and backend, or between microservices). For each endpoint, specify:
+    *   HTTP Method (GET, POST, PUT, DELETE, etc.)
+    *   Path
+    *   Request parameters/body structure
+    *   Response structure (including status codes)
+7.  **Design Database Schema:** Propose a database schema to store the required data.
+    *   Identify main entities.
+    *   Define tables/collections.
+    *   Specify columns/fields with data types.
+    *   Indicate primary keys, foreign keys, and relationships.
+8.  **Component Interactions:** Detail how the different components interact with each other. This builds upon the data flows and API specifications. Clarify protocols and data formats used for communication.
+9.  **Generate Markdown Document:** Consolidate all the above information into a single Markdown file named `technical_architecture.md` (or similar, confirm preferred name with the user). Structure the document clearly with headings for each section (Architecture Overview, Components, Data Flows, APIs, Database Schema, Interactions). Use Markdown formatting, code blocks, and Mermaid diagrams where appropriate.
+
+## Output Format (`technical_architecture.md`):
+
+```markdown
+# Technical Architecture Document
+
+## 1. Overview
+
+*   Brief description of the system based on the PRD.
+*   Chosen high-level architectural pattern and justification.
+
+## 2. Components
+
+*   List of key components and their responsibilities.
+    *   **Component A:** Description...
+    *   **Component B:** Description...
+    *   ...
+
+## 3. Data Flows
+
+*   Description of major data flows for key use cases.
+*   (Optional) Mermaid sequence diagrams:
+    ```mermaid
+    sequenceDiagram
+        User->>Frontend: Action
+        Frontend->>Backend API: Request
+        Backend API->>Database: Query
+        Database-->>Backend API: Data
+        Backend API-->>Frontend: Response
+        Frontend-->>User: Update UI
+    ```
+
+## 4. API Specification
+
+*   List of primary API endpoints.
+    *   **`POST /api/users`**
+        *   **Description:** Creates a new user.
+        *   **Request Body:** `{ "name": "string", "email": "string" }`
+        *   **Response (201 Created):** `{ "id": "string", "name": "string", "email": "string" }`
+        *   **Response (400 Bad Request):** `{ "error": "Invalid input" }`
+    *   **`GET /api/users/{userId}`**
+        *   **Description:** Retrieves user details.
+        *   **Path Parameter:** `userId` (string)
+        *   **Response (200 OK):** `{ "id": "string", "name": "string", "email": "string" }`
+        *   **Response (404 Not Found):** `{ "error": "User not found" }`
+    *   ...
+
+## 5. Database Schema
+
+*   Description of the database structure.
+*   **Users Table:**
+    *   `id` (Primary Key, UUID/Int)
+    *   `name` (String)
+    *   `email` (String, Unique)
+    *   `created_at` (Timestamp)
+*   **Other Tables...**
+    *   ...
+*   (Optional) Entity Relationship Diagram description or Mermaid ER diagram.
+
+## 6. Component Interactions
+
+*   Detailed explanation of how components communicate (protocols, data formats).
+*   Example: Frontend interacts with Backend API via RESTful HTTP requests using JSON.
+
+```
+
+## Instructions for Use:
+
+When invoking this rule, ensure you have access to the relevant PRD. Follow the steps above to generate the `technical_architecture.md` file. Be prepared to ask clarifying questions about the requirements if needed.

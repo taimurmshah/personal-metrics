@@ -3,18 +3,18 @@
 Based on the [MVP_PRD.md](./MVP_PRD.md). This plan outlines the steps to build the Minimum Viable Product for the Meditation Tracker iOS application.
 
 ## 1. Database Tasks (`Supabase`/`PostgreSQL`)
-*   [ ] Define `Users` table schema (or confirm `Supabase` Auth structure suffices) - Ref: FR17
-*   [ ] Define `MeditationSessions` table schema - Ref: FR16
-*   [ ] Set up `Supabase` project.
-*   [ ] Implement `Supabase` Row Level Security (RLS) policies for `MeditationSessions` (users can only access their own data) - Ref: NF3, DB3
-*   [ ] Set up `Supabase` Auth for Google Sign-In - Ref: FR1-FR6, DB3
+*   [x] Define `Users` table schema (or confirm `Supabase` Auth structure suffices) - Ref: FR17
+*   [x] Define `MeditationSessions` table schema - Ref: FR16
+*   [x] Set up `Supabase` project.
+*   [x] Implement `Supabase` Row Level Security (RLS) policies for `MeditationSessions` (users can only access their own data) - Ref: NF3, DB3
+*   [x] Set up `Supabase` Auth for Google Sign-In - Ref: FR1-FR6, DB3
 
 ## 2. Backend Tasks (`Node.js`/`TypeScript` on `Vercel`)
-*   [ ] Set up `Node.js`/`TypeScript` project (`Express.js`).
-*   [ ] Write unit tests for Google Auth verification & user handling (TDD) - Ref: FR4
-*   [ ] Implement Google Auth verification & user handling logic (potentially leveraging `Supabase` Auth) - Ref: FR4
-*   [ ] Write unit tests for `POST /api/sessions` endpoint (data validation, user auth) (TDD) - Ref: FR13, FR15
-*   [ ] Implement `POST /api/sessions` endpoint to receive and store session data in `Supabase` - Ref: FR13, FR14, FR15
+*   [x] Set up `Node.js`/`TypeScript` project (`Express.js`).
+*   [x] Write unit tests for Google Auth verification & user handling (TDD) - Ref: FR4
+*   [x] Implement Google Auth verification & user handling logic (potentially leveraging `Supabase` Auth) - Ref: FR4
+*   [x] Write unit tests for `POST /api/sessions` endpoint (data validation, user auth) (TDD) - Ref: FR13, FR15
+*   [x] Implement `POST /api/sessions` endpoint to receive and store session data in `Supabase` - Ref: FR13, FR14, FR15
 *   [ ] Configure `Vercel` project & environment variables.
 
 ## 3. Frontend Tasks (iOS `Swift`)
