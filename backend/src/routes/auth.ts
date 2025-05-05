@@ -15,7 +15,8 @@ router.post('/google', async (req: Request, res: Response) => {
     const { googleToken } = req.body; // Expecting token in request body
 
     if (!googleToken) {
-        return res.status(400).json({ error: 'Missing googleToken in request body' });
+        res.status(400).json({ error: 'Missing googleToken in request body' });
+        return; // Use plain return to exit early
     }
 
     try {
@@ -23,7 +24,8 @@ router.post('/google', async (req: Request, res: Response) => {
 
         if (authResult.error || !authResult.user || !authResult.session) {
             // Use the error message from the auth service, or a generic one
-            return res.status(401).json({ error: authResult.error || 'Google Sign-In failed' });
+            res.status(401).json({ error: authResult.error || 'Google Sign-In failed' });
+            return; // Use plain return to exit early
         }
 
         // --- JWT Generation --- 

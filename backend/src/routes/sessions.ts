@@ -16,14 +16,17 @@ router.post('/', verifyAuthToken, async (req: AuthenticatedRequest, res: Respons
 
   // Basic validation
   if (!session_start_time || typeof session_start_time !== 'string' || isNaN(Date.parse(session_start_time))) {
-    return res.status(400).json({ error: 'Invalid session data: session_start_time is required and must be a valid ISO string.' });
+    res.status(400).json({ error: 'Invalid session data: session_start_time is required and must be a valid ISO string.' });
+    return;
   }
   if (duration_seconds == null || typeof duration_seconds !== 'number' || duration_seconds <= 0) {
-    return res.status(400).json({ error: 'Invalid session data: duration_seconds is required and must be a positive number.' });
+    res.status(400).json({ error: 'Invalid session data: duration_seconds is required and must be a positive number.' });
+    return;
   }
   if (!userId) {
      // This should technically be caught by verifyAuthToken, but belt-and-suspenders
-    return res.status(401).json({ error: 'Authentication required.' });
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
   }
 
   try {
@@ -46,12 +49,14 @@ router.post('/', verifyAuthToken, async (req: AuthenticatedRequest, res: Respons
 
     if (error) {
       console.error('Supabase insertion error:', error);
-      return res.status(500).json({ error: 'Failed to save session' });
+      res.status(500).json({ error: 'Failed to save session' });
+      return;
     }
 
     if (!data) {
         console.error('Supabase insertion returned no data despite no error.');
-        return res.status(500).json({ error: 'Failed to save session: No confirmation data returned.' })
+        res.status(500).json({ error: 'Failed to save session: No confirmation data returned.' });
+        return;
     }
 
     // Respond with success and the new session ID
