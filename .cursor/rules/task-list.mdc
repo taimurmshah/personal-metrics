@@ -1,0 +1,165 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Implementation Plan & Task Workflow
+
+Guidelines for creating and managing an implementation plan in markdown to track project progress, enforce a specific development order, and apply Test-Driven Development (TDD).
+
+## Implementation Plan File Creation
+
+1.  When starting a new project or feature (often based on a Product/Feature Requirement Document), create an implementation plan file in the project root:
+    *   Use the naming convention: `implementation-plan-v1.md`, `implementation-plan-v2.md`, etc., incrementing the version for significant updates or iterations.
+    *   Include a clear title linking to the feature or project.
+
+2.  Structure the file with sections representing the mandatory workflow stages:
+    ```markdown
+    # Feature/Project Name - Implementation Plan v[N]
+
+    Brief description of the feature/project and its purpose. Link to PRD/FRD if available.
+
+    ## 1. Database Tasks
+    *   [ ] Define schema for X
+    *   [ ] Create migration scripts
+    *   [ ] Seed initial data
+
+    ## 2. Backend Tasks
+    *   [ ] Write unit tests for data access logic for X (TDD)
+    *   [ ] Implement data access logic for X
+    *   [ ] Write unit tests for API endpoint Y (TDD)
+    *   [ ] Create API endpoint Y
+    *   [ ] Write unit tests for authentication on endpoint Y (TDD)
+    *   [ ] Add authentication to endpoint Y
+    *   [ ] Write unit tests for service Z (TDD)
+
+    ## 3. Frontend Tasks
+    *   [ ] Write unit/integration tests for component A (TDD)
+    *   [ ] Create component A
+    *   [ ] Integrate API endpoint Y into component A
+    *   [ ] Style component B
+    *   [ ] Write E2E tests for feature flow
+
+    ## 4. Local Testing Tasks
+    *   [ ] Perform full local integration testing
+    *   [ ] Test edge cases for feature X
+    *   [ ] Verify user flows A, B, C
+
+    ## 5. Deployment Tasks
+    *   [ ] Update CI/CD pipeline
+    *   [ ] Prepare deployment configuration
+    *   [ ] Deploy to staging environment
+    *   [ ] Monitor production deployment
+
+    ## Implementation Details
+
+    Detailed description of architecture, data flow, technical decisions, etc.
+
+    ## Relevant Files
+
+    List of key files created or modified during implementation.
+    *   `path/to/db/schema.prisma` - Database schema definitions
+    *   `path/to/backend/service.js` - Backend logic for feature X
+    *   `path/to/frontend/ComponentA.jsx` - UI component for feature X
+    ```
+    *(Note: The example above includes illustrative TDD tasks)*
+
+## Task List Maintenance & Workflow Enforcement
+
+1.  **Strict Order:** Tasks **must** be addressed in the defined order: Database -> Backend -> Frontend -> Local Testing -> Deployment. Do not start tasks in a later section until all tasks in the preceding section are marked as complete (`[x]`).
+2.  **Update Progress:** Mark tasks as completed by changing `[ ]` to `[x]` as soon as they are done.
+3.  **Add Tasks:** Add new tasks *within the appropriate section* as they are identified during development. If a new database task is found while working on the backend, add it to the "Database Tasks" section and address it if necessary before proceeding further with the backend. Follow the TDD process described below when adding implementation tasks.
+4.  **Keep Details Updated:** Maintain the "Implementation Details" and "Relevant Files" sections throughout the development process.
+
+## Test-Driven Development (TDD) Process
+
+When adding and executing specific implementation tasks (primarily in Backend and Frontend stages), adhere to the following TDD process:
+
+1.  **Reference Testing Standards:** Before writing any tests or code, familiarize yourself with our project's testing standards outlined in `@testing-guidelines.mdc`.
+
+2.  **Define Task & Write Tests First:**
+    *   Clearly define the implementation task (e.g., "Implement data access logic for X", "Create component A") in the `implementation plan.md`.
+    *   **Before writing any implementation code for this task**, add a preceding task to write the corresponding tests (e.g., "Write unit tests for data access logic for X").
+    *   Write comprehensive tests for this functionality first. Put significant effort into designing robust and meaningful tests that accurately reflect the desired behavior and edge cases. Mark the "write tests" task as complete (`[x]`).
+
+3.  **Write Implementation Code:**
+    *   Now, focus on the implementation task (e.g., "Implement data access logic for X").
+    *   Write the minimum amount of code necessary to pass the tests you just wrote.
+    *   Initially, expect the tests to fail.
+
+4.  **Iterate on Code, Not Tests:**
+    *   Run the tests.
+    *   If tests fail, **modify the implementation code** to make them pass.
+    *   **Avoid modifying the tests** to fit the code, unless the initial test design is found to be flawed or incomplete after careful consideration. The primary goal is to make the code conform to the tests.
+    *   Refactor the code as needed while ensuring all tests continue to pass.
+    *   Once all tests pass, mark the implementation task as complete (`[x]`).
+
+5.  **Repeat:** Continue this test-first cycle for subsequent implementation tasks outlined in the plan.
+
+This TDD approach ensures that we build well-tested, robust features aligned with predefined requirements.
+
+## AI Instructions
+
+When assisting with development based on this plan:
+
+1.  **Identify Current Stage:** Always determine the current stage of development by finding the first section with incomplete tasks (`[ ]`).
+2.  **Prioritize Tasks:** Focus on completing tasks within the *current* active stage, respecting the TDD order (write tests task before implementation task). Do not suggest or start work on tasks in subsequent stages or implementation tasks before their corresponding test task is done.
+3.  **Update Plan:** After completing a task or a set of related tasks, update the markdown file by marking tasks as complete (`[x]`).
+4.  **Add Discovered Tasks:** If new tasks are identified, add them to the correct section based on the workflow order, ensuring TDD pairs (write test task + implementation task) are created where applicable.
+5.  **Maintain Sections:** Keep the "Implementation Details" and "Relevant Files" sections current.
+6.  **Enforce Order:** Explicitly state if a requested action would violate the workflow or TDD order and refuse to proceed with out-of-order tasks.
+
+## Example Workflow Progression (with TDD)
+
+If "Database Tasks" are complete, and you are working on "Backend Tasks":
+
+```markdown
+## 1. Database Tasks
+*   [x] Define schema for X
+*   [x] Create migration scripts
+*   [x] Seed initial data
+
+## 2. Backend Tasks
+*   [ ] Write unit tests for data access logic for X (TDD)  <- Work on this next
+*   [ ] Implement data access logic for X
+*   [ ] Write unit tests for API endpoint Y (TDD)
+*   [ ] Create API endpoint Y
+*   [ ] ...
+
+## 3. Frontend Tasks
+*   [ ] Write unit/integration tests for component A (TDD) <- Do not work on this yet
+*   [ ] Create component A
+*   [ ] ...
+```
+
+After completing "Write unit tests for data access logic for X":
+
+```markdown
+## 1. Database Tasks
+*   [x] Define schema for X
+*   [x] Create migration scripts
+*   [x] Seed initial data
+
+## 2. Backend Tasks
+*   [x] Write unit tests for data access logic for X (TDD)
+*   [ ] Implement data access logic for X                 <- Work on this next (make tests pass)
+*   [ ] Write unit tests for API endpoint Y (TDD)
+*   [ ] Create API endpoint Y
+*   [ ] ...
+```
+
+After completing "Implement data access logic for X":
+
+```markdown
+## 1. Database Tasks
+*   [x] Define schema for X
+*   [x] Create migration scripts
+*   [x] Seed initial data
+
+## 2. Backend Tasks
+*   [x] Write unit tests for data access logic for X (TDD)
+*   [x] Implement data access logic for X
+*   [ ] Write unit tests for API endpoint Y (TDD)         <- Work on this next
+*   [ ] Create API endpoint Y
+*   [ ] ...
+```
