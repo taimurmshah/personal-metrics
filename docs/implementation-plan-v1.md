@@ -15,11 +15,11 @@ Based on the [MVP_PRD.md](./MVP_PRD.md). This plan outlines the steps to build t
 *   [x] Implement Google Auth verification & user handling logic (potentially leveraging `Supabase` Auth) - Ref: FR4
 *   [x] Write unit tests for `POST /api/sessions` endpoint (data validation, user auth) (TDD) - Ref: FR13, FR15
 *   [x] Implement `POST /api/sessions` endpoint to receive and store session data in `Supabase` - Ref: FR13, FR14, FR15
-*   [ ] Configure `Vercel` project & environment variables.
+*   [x] Configure `Vercel` project & environment variables.
 
 ## 3. Frontend Tasks (iOS `Swift`)
-*   [ ] Set up iOS Project (`Swift`, UIKit/SwiftUI).
-*   [ ] Write tests for Google Sign-In flow initiation (TDD) - Ref: FR1, FR2
+*   [x] Set up iOS Project (`Swift`, UIKit/SwiftUI).
+*   [x] Write tests for Google Sign-In flow initiation (TDD) - Ref: FR1, FR2
 *   [ ] Implement Google Sign-In button and initiate OAuth flow - Ref: FR1, FR2
 *   [ ] Write tests for handling Google Sign-In response and sending to backend (TDD) - Ref: FR3
 *   [ ] Implement handling of Google Sign-In response and communication with backend auth - Ref: FR3, FR4
@@ -71,4 +71,4 @@ Based on the [MVP_PRD.md](./MVP_PRD.md). This plan outlines the steps to build t
 *   `ios/MeditationTracker/TimerViewController.swift` - Main timer UI/Logic
 *   `ios/MeditationTracker/APIService.swift` - Backend API communication
 *   `ios/MeditationTracker/KeychainService.swift` - Secure token storage
-*   `ios/MeditationTrackerTests/...` - iOS unit/integration tests 
+*   `ios/MeditationTrackerTests/...`

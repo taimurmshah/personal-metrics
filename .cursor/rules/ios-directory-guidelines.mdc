@@ -1,0 +1,32 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# iOS Directory Guidelines
+
+**Objective:** Prevent the creation of duplicate files or directories within the `ios` project structure.
+
+## Core Principles
+
+1.  **Verify Existence Before Creation/Modification:** Before creating a new file or modifying an existing one within the `ios` directory, ALWAYS verify if a file with the same name and purpose already exists in the target location or elsewhere within the `ios` structure. Use file search or directory listing tools if unsure.
+
+2.  **Audit Directory Structure:** Before adding new files or directories, thoroughly review the relevant parts of the existing `ios` directory structure. Understand the current organization to ensure your changes fit logically and don't introduce redundancy.
+
+## Procedures
+
+-   **When asked to create a new file (e.g., `MyNewClass.swift` in `ios/ProjectName/Sources/`):**
+    1.  Check if `ios/ProjectName/Sources/MyNewClass.swift` already exists.
+    2.  Check if a similar class/file exists elsewhere in `ios/` that might serve the same purpose.
+    3.  If no duplicates are found, proceed with creation.
+
+-   **When asked to add a new directory (e.g., `ios/ProjectName/Resources/NewResources/`):**
+    1.  Check if `ios/ProjectName/Resources/NewResources/` already exists.
+    2.  Review the contents of `ios/ProjectName/Resources/` to ensure `NewResources` is an appropriate and non-redundant addition.
+    3.  If no duplicates are found and the structure is sound, proceed with creation.
+
+-   **When asked to modify a file:**
+    1.  Confirm the target file path is correct and the file exists.
+    2.  Briefly review the file's context within its directory to ensure the modification is appropriate for that specific file.
+
+By consistently applying these checks, we can maintain a clean and accurate `ios` directory structure.
