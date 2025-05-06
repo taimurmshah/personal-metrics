@@ -1,0 +1,81 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Error Handling and Logging Guidelines
+
+## Purpose
+
+This rule establishes project-wide best practices for error handling and console logging. Adhering to these guidelines ensures our application is more robust, easier to debug, monitor, and maintain. Consistent and informative logs and errors are crucial for understanding application behavior and resolving issues efficiently.
+
+## Core Principles
+
+1.  **Clarity and Context:** Both error messages and log entries must be clear, concise, and provide sufficient context to understand the event.
+2.  **Robustness:** Anticipate potential failures and handle them gracefully. Don't let the application fail silently.
+3.  **Security:** Never log sensitive information (PII, credentials, keys, etc.).
+4.  **Performance:** Be mindful of the performance impact of logging, especially in high-frequency operations.
+5.  **Consistency:** Apply these practices uniformly across the codebase.
+
+## Error Handling Best Practices
+
+1.  **Handle Errors Appropriately:**
+    *   Use standard language mechanisms (`try...catch`, `Promise.catch()`, etc.).
+    *   Catch specific error types whenever possible instead of generic `Error` or `Exception`.
+    *   Handle errors at the earliest point where you have enough context to take meaningful action (e.g., retry, return a specific response, log and re-throw).
+    *   Don't swallow errors without logging them or taking appropriate action. Avoid empty `catch` blocks.
+2.  **Provide Informative Error Messages:**
+    *   Messages should clearly state what went wrong.
+    *   If possible, include information about *why* it went wrong.
+    *   Suggest a potential cause or next step if applicable.
+    *   Avoid vague messages like "An error occurred" or "Operation failed."
+3.  **Use Custom Error Types (When Appropriate):**
+    *   For application-specific error conditions, define custom error classes inheriting from `Error`. This allows for more specific `catch` blocks and clearer intent.
+    *   Example: `class DatabaseConnectionError extends Error { ... }`
+4.  **Ensure State Consistency:**
+    *   Use `finally` blocks or equivalent mechanisms to clean up resources (e.g., close files, release locks) regardless of whether an error occurred.
+    *   Ensure the application state remains valid after an error is handled.
+5.  **Log Errors:**
+    *   Always log unhandled exceptions or significant errors that are caught and handled.
+    *   Include the full error object (especially the stack trace) in the log entry for debugging.
+
+## Console Logging Best Practices
+
+1.  **Use Standard Log Levels:**
+    *   Employ consistent log levels:
+        *   `FATAL`: System-crashing errors requiring immediate attention. (Use sparingly)
+        *   `ERROR`: Significant errors affecting functionality but not crashing the app. Include stack traces.
+        *   `WARN`: Potential issues or unexpected situations that don't necessarily break functionality but should be noted (e.g., deprecated usage, fallback behavior).
+        *   `INFO`: Significant operational events, lifecycle milestones (e.g., service started, configuration loaded, request processed successfully).
+        *   `DEBUG`: Detailed information useful for developers during debugging. Should generally be disabled in production by default but configurable.
+        *   `TRACE`: Highly detailed, fine-grained debugging information. (Use very sparingly, usually disabled in production).
+    *   Use the appropriate level for each message. Avoid logging everything as `INFO` or `ERROR`.
+2.  **Write Meaningful and Contextual Messages:**
+    *   Explain *what* happened.
+    *   Include relevant data: Request IDs, User IDs, relevant variable values, function names, timestamps.
+    *   Bad: `log.info("Processing done")`
+    *   Good: `log.info({ requestId: 'xyz123', userId: 5, function: 'processOrder', message: 'Order processing completed successfully for orderId 987' })`
+3.  **Use Structured Logging (JSON):**
+    *   Log messages as JSON objects rather than plain strings whenever feasible.
+    *   This makes logs machine-readable, filterable, and easily ingestible by log analysis platforms (e.g., Datadog, Splunk, ELK).
+    *   Example: `console.info(JSON.stringify({ timestamp: new Date().toISOString(), level: 'INFO', message: 'User logged in', userId: 123, sourceIp: '192.168.1.100' }));`
+    *   *Note: Use a proper logging library (see below) which handles formatting.*
+4.  **Implement a Logging Library/Framework:**
+    *   Don't rely solely on `console.log/warn/error`. Use a dedicated logging library (e.g., `winston`, `pino` for Node.js; consider integrating with frontend-specific logging services).
+    *   Libraries provide features like:
+        *   Structured formatting (JSON)
+        *   Log level filtering
+        *   Multiple output destinations (transports): console, file, external services
+        *   Log rotation/archiving
+        *   Asynchronous logging for performance
+5.  **DO NOT Log Sensitive Information:**
+    *   **Absolutely critical.** Never log: Passwords, API keys, tokens, credit card numbers, Social Security Numbers, personal health information, or any PII/PHI.
+    *   Review code carefully to ensure sensitive data doesn't leak into logs.
+    *   Implement redaction/masking in the logging configuration or application logic if necessary, but avoidance is best.
+6.  **Be Mindful of Production Logs:**
+    *   `DEBUG` and `TRACE` logs should generally be disabled in production environments to avoid excessive noise and performance overhead. Ensure log levels are configurable per environment.
+    *   Monitor log volume and costs associated with log storage/analysis. Consider log sampling for high-volume, repetitive messages if necessary, but ensure critical errors are always logged.
+7.  **Consider Correlation IDs:**
+    *   For distributed systems or complex request flows, include a unique correlation ID in all related log messages. This allows tracing a single request across multiple services or components.
+
+By following these guidelines, we can significantly improve our ability to understand, debug, and maintain our application effectively.

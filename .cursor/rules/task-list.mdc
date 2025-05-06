@@ -9,15 +9,15 @@ Guidelines for creating and managing an implementation plan in markdown to track
 
 ## Implementation Plan File Creation
 
-1.  When starting a new project or feature (often based on a Product/Feature Requirement Document), create an implementation plan file in the project root:
-    *   Use the naming convention: `implementation-plan-v1.md`, `implementation-plan-v2.md`, etc., incrementing the version for significant updates or iterations.
+1.  When starting a new project or feature (often based on a Product/Feature Requirement Document), create an implementation plan file in the `docs/` directory:
+    *   Use the naming convention: `docs/implementation-plan-v1.md`, `docs/implementation-plan-v2.md`, etc., incrementing the version for significant updates or iterations.
     *   Include a clear title linking to the feature or project.
 
 2.  Structure the file with sections representing the mandatory workflow stages:
     ```markdown
     # Feature/Project Name - Implementation Plan v[N]
 
-    Brief description of the feature/project and its purpose. Link to PRD/FRD if available.
+    Brief description of the feature/project and its purpose. Link to PRD/FRD (e.g., `docs/MVP_PRD.md`) if available.
 
     ## 1. Database Tasks
     *   [ ] Define schema for X
@@ -58,6 +58,8 @@ Guidelines for creating and managing an implementation plan in markdown to track
     ## Relevant Files
 
     List of key files created or modified during implementation.
+    *   `docs/MVP_PRD.md` - Product Requirements Document (Example)
+    *   `docs/implementation-plan-vX.md` - This plan file (Example)
     *   `path/to/db/schema.prisma` - Database schema definitions
     *   `path/to/backend/service.js` - Backend logic for feature X
     *   `path/to/frontend/ComponentA.jsx` - UI component for feature X
@@ -78,7 +80,7 @@ When adding and executing specific implementation tasks (primarily in Backend an
 1.  **Reference Testing Standards:** Before writing any tests or code, familiarize yourself with our project's testing standards outlined in `@testing-guidelines.mdc`.
 
 2.  **Define Task & Write Tests First:**
-    *   Clearly define the implementation task (e.g., "Implement data access logic for X", "Create component A") in the `implementation plan.md`.
+    *   Clearly define the implementation task (e.g., "Implement data access logic for X", "Create component A") in the relevant `docs/implementation-plan-vX.md` file.
     *   **Before writing any implementation code for this task**, add a preceding task to write the corresponding tests (e.g., "Write unit tests for data access logic for X").
     *   Write comprehensive tests for this functionality first. Put significant effort into designing robust and meaningful tests that accurately reflect the desired behavior and edge cases. Mark the "write tests" task as complete (`[x]`).
 
@@ -104,7 +106,7 @@ When assisting with development based on this plan:
 
 1.  **Identify Current Stage:** Always determine the current stage of development by finding the first section with incomplete tasks (`[ ]`).
 2.  **Prioritize Tasks:** Focus on completing tasks within the *current* active stage, respecting the TDD order (write tests task before implementation task). Do not suggest or start work on tasks in subsequent stages or implementation tasks before their corresponding test task is done.
-3.  **Update Plan:** After completing a task or a set of related tasks, update the markdown file by marking tasks as complete (`[x]`).
+3.  **Update Plan:** After completing a task or a set of related tasks, update the relevant markdown file (e.g., `docs/implementation-plan-vX.md`) by marking tasks as complete (`[x]`).
 4.  **Add Discovered Tasks:** If new tasks are identified, add them to the correct section based on the workflow order, ensuring TDD pairs (write test task + implementation task) are created where applicable.
 5.  **Maintain Sections:** Keep the "Implementation Details" and "Relevant Files" sections current.
 6.  **Enforce Order:** Explicitly state if a requested action would violate the workflow or TDD order and refuse to proceed with out-of-order tasks.

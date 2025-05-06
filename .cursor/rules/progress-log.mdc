@@ -1,0 +1,101 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Progress Log Rule
+
+## Purpose
+
+This rule governs the creation, maintenance, and use of a versioned Progress Log file (`progress-log-vX.md`) located in the `docs/` directory. The Progress Log serves as a detailed historical record of decisions made, problems encountered, attempts made, and solutions applied during the execution of tasks outlined in the corresponding `implementation-plan-vX.md` file. It complements the implementation plan by providing context and capturing the iterative process behind development steps.
+
+## File Naming and Location
+
+1.  **Location:** All Progress Log files must reside in the `docs/` directory at the project root.
+2.  **Naming Convention:** The Progress Log filename must directly correspond to the version of the implementation plan currently being worked on.
+    *   If the active plan is `implementation-plan-v1.md`, the log file must be `docs/progress-log-v1.md`.
+    *   If the active plan is `implementation-plan-v2.md`, the log file must be `docs/progress-log-v2.md`, and so on.
+
+## Identifying the Active Plan and Log
+
+Before updating or referencing the log, the AI must:
+
+1.  Identify the highest version number `X` for which an `implementation-plan-vX.md` file exists in the project root. This is considered the "active" implementation plan.
+2.  Determine the corresponding Progress Log filename: `docs/progress-log-vX.md`.
+3.  If the required `docs/progress-log-vX.md` file does not exist, the AI must create it with the basic structure outlined below before adding any entries.
+
+## Progress Log Structure and Content
+
+The Progress Log should mirror the task structure of its corresponding implementation plan.
+
+1.  **Top-Level Sections:** Use the main numbered sections from the implementation plan as top-level headings (e.g., `## 1. Database Tasks`, `## 2. Backend Tasks`).
+2.  **Sub-Task Entries:** Under each top-level section, list the specific sub-tasks from the implementation plan (e.g., `*   [ ] Define schema for X`).
+3.  **Historical Log (Problem/Attempt/Solution):** Directly beneath *each sub-task*, maintain an indented list documenting the development process for that specific task.
+    *   For each distinct problem or decision point encountered within a sub-task, create an indented entry starting with `**Problem:**`.
+    *   Under each `**Problem:**`, list the steps taken or suggestions considered as further indented entries starting with `**Attempt:**`. There can be multiple attempts per problem.
+    *   Once a specific problem is resolved, add a final indented entry `**Solution:**` under the relevant attempts, describing the resolution for *that specific problem*.
+
+**Example Structure (`docs/progress-log-v1.md`):**
+
+```markdown
+# Progress Log v1
+
+Corresponds to implementation-plan-v1.md
+
+## 1. Database Tasks
+
+*   [ ] Define schema for X
+    *   **Problem:** Needed clarification on the required fields for the User model.
+        *   **Attempt 1:** Discussed initial requirements.
+        *   **Solution:** Decided on `id`, `email`, `name`, `createdAt`, `updatedAt`. Added `hashedPassword` later based on auth needs.
+*   [ ] Create migration scripts
+    *   **Problem:** Encountered Prisma migration error `[Error Code]` during initial `prisma migrate dev`.
+        *   **Attempt 1:** AI suggested checking the database connection string in `.env`.
+        *   **Solution:** Corrected the string; migration succeeded.
+    *   **Problem:** Second migration attempt failed with `[Another Error Code]` after adding a new relation between User and Post.
+        *   **Attempt 1:** Reviewed Prisma schema relation syntax. Looked correct.
+        *   **Attempt 2:** AI suggested checking for potential database drift or shadow database issues.
+        *   **Attempt 3:** Tried running `prisma migrate reset`.
+        *   **Solution:** The `prisma migrate reset` command resolved the shadow database inconsistency. The subsequent `prisma migrate dev` worked.
+*   [ ] Seed initial data
+    *   **Problem:** Deciding on initial seed data for testing login.
+        *   **Solution:** Created one test user with email `test@example.com` via a Prisma seed script.
+
+## 2. Backend Tasks
+
+*   [ ] Write unit tests for data access logic for X (TDD)
+    *   **Problem:** Discussed mocking strategy for Prisma client in Vitest.
+        *   **Attempt 1:** Considered using `prisma-mock`.
+        *   **Attempt 2:** Reviewed project's `testing-guidelines.mdc`.
+        *   **Solution:** Adopted the standard `vi.mock('@/utils/prisma')` approach defined in the guidelines.
+*   [ ] Implement data access logic for X
+    *   **Problem:** Ensure `getUserByEmail` handles cases where the user is not found gracefully.
+        *   **Attempt 1:** Initial implementation threw an error if user not found.
+        *   **Solution:** Modified function to return `null` if Prisma's `findUnique` returns null. Added a specific test case for this scenario.
+*   [ ] ... (Further sub-tasks and their logs)
+
+## 3. Frontend Tasks
+
+*   [ ] ...
+
+(... and so on for other sections)
+```
+
+## Updating the Progress Log
+
+1.  **Frequency:** The Progress Log **must** be updated during or immediately after addressing *any* part of a sub-task listed in the implementation plan whenever a notable event (problem identified, attempt made, solution found, decision finalized) occurs.
+2.  **Content:** Add new `Problem:`, `Attempt:`, or `Solution:` entries under the relevant sub-task heading using the indentation described above. Keep entries concise but informative.
+3.  **Responsibility:** The AI is responsible for proposing updates to the Progress Log whenever it provides suggestions, solutions, participates in decisions, or observes problems related to a sub-task.
+
+## Referencing the Progress Log
+
+Before proposing solutions to potential bugs, suggesting architectural decisions, or answering questions about previous choices, the AI **must**:
+
+1.  Identify the active Progress Log file (`docs/progress-log-vX.md`).
+2.  Briefly review the log, particularly entries (`Problem:`, `Attempt:`, `Solution:`) related to the current task or problem area.
+3.  Check if a similar `Problem:` has been previously recorded and if the corresponding `Attempt:` or `Solution:` entries provide relevant context or a potential resolution path.
+4.  If relevant information is found, incorporate it into the response (e.g., "Looking at `docs/progress-log-vX.md`, we faced a similar `Problem:` with X. The `Solution:` was Y. Let's see if that applies here..." or "Under the Z task log, we recorded an `Attempt:` to use library W, but it caused issues. Maybe we should avoid that approach...").
+
+## Goal
+
+By adhering to this rule, we maintain a valuable, context-rich, and detailed history of the project's evolution, including troubleshooting steps. This facilitates debugging, onboarding, knowledge sharing, and consistent decision-making across different development phases and versions.
