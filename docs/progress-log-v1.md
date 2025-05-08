@@ -120,6 +120,34 @@ Corresponds to implementation-plan-v1.md
 
 *   [ ] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2
 *   [ ] Deploy backend API to `Vercel`.
+    *   **Problem:** Vercel deployment results in `HTTP 404` with `x-vercel-error: NOT_FOUND` for all paths, including API endpoints, despite successful build logs.
+        *   **Attempt 1:** Initial `curl` tests to base URL and `/api/auth/google` both yielded Vercel platform 404s.
+        *   **Attempt 2:** Investigated Vercel project settings. "Root Directory" was set to `backend`. "Framework Preset" was "Other".
+        *   **Attempt 3:** Created `vercel.json` at the project root to explicitly define build (using `backend/package.json` and `@vercel/node`) and routes (routing `/api/(.*)` to `backend/dist/server.js`). Deployed. Still 404.
+            *   `vercel.json` content:
+                ```json
+                {
+                  "version": 2,
+                  "builds": [
+                    {
+                      "src": "backend/package.json",
+                      "use": "@vercel/node",
+                      "config": {
+                        "includeFiles": ["dist/**", "node_modules/**"]
+                      }
+                    }
+                  ],
+                  "routes": [
+                    {
+                      "src": "/api/(.*)",
+                      "dest": "backend/dist/server.js"
+                    }
+                  ]
+                }
+                ```
+        *   **Attempt 4:** Identified a warning in Vercel UI: "Configuration Settings in the current Production deployment differ from your current Project Settings."
+        *   **Attempt 5:** Instructed user to modify Vercel UI settings: clear "Root Directory" (make it empty), turn off all "Override" toggles for Build/Output/Install commands, save, and redeploy. Still 404.
+        *   **Attempt 6 (Pending):** Further investigation into the persistent Vercel UI warning and potentially trying to "reset" Vercel's framework interpretation.
 *   [ ] Set up TestFlight for iOS app distribution - Ref: DEP3
 *   [ ] Build and distribute iOS app via TestFlight.
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
