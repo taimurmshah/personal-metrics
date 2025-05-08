@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
-import { getToken, saveToken, removeToken } from 'src/utils/storage';
+import { getToken, saveToken, removeToken } from '../utils/storage';
 import { ActivityIndicator, View } from 'react-native';
 
 interface AuthContextType {

@@ -9,7 +9,7 @@ This file stores project-specific knowledge, conventions, and user preferences l
 
 ## User Preferences
 
--   [Preference 1]
+-   Prefer `axios` for HTTP requests over `fetch` where sensible.
 -   [Preference 2]
 
 ## Technical Decisions

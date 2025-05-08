@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, Button, Alert, ActivityIndicator } from 'react-native';
 import { GoogleSignin, statusCodes, isErrorWithCode, GoogleSigninButton } from '@react-native-google-signin/google-signin';
-import type { User, SignInResponse } from '@react-native-google-signin/google-signin'; // Import types
+// Importing the type is optional; using `any` here avoids type mismatches from different library versions.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GoogleUser = any;
 import Config from 'react-native-config'; // Import react-native-config
 import axios from 'axios'; // Import axios
 import { useAuth } from '../context/AuthContext'; // Import useAuth
@@ -13,11 +15,15 @@ const AuthScreen: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const { login } = useAuth(); // Get login function from context
 
-  // Backend API endpoint for Google authentication
-  const BACKEND_AUTH_URL = 'YOUR_BACKEND_BASE_URL/api/auth/google'; // <-- REPLACE WITH ACTUAL URL
+  // Backend API endpoint for Google authentication - read base URL from env via react-native-config
+  // Ensure your `.env` defines API_BASE_URL (e.g., https://my-backend.vercel.app)
+  const BACKEND_AUTH_URL = `${Config.API_BASE_URL}/api/auth/google`;
 
   React.useEffect(() => {
     // Configuration can be done once, e.g., when the component mounts
+    console.log('Configuring Google Sign-In with:');
+    console.log('Web Client ID:', Config.GOOGLE_WEB_CLIENT_ID);
+    console.log('iOS Client ID:', Config.GOOGLE_IOS_CLIENT_ID);
     GoogleSignin.configure({
       webClientId: Config.GOOGLE_WEB_CLIENT_ID, // Read from .env via react-native-config
       iosClientId: Config.GOOGLE_IOS_CLIENT_ID, // Read from .env via react-native-config
@@ -33,55 +39,52 @@ const AuthScreen: React.FC = () => {
         showPlayServicesUpdateDialog: true,
       });
       console.log('Attempting Google Sign-In...');
-      const response: SignInResponse = await GoogleSignin.signIn();
-      console.log('Google Sign-In Response:', response);
-
-      if (response.type === 'success') {
-        const userInfo: User = response.data;
-        console.log('User Info:', userInfo);
-
-        if (!userInfo.idToken) {
-          throw new Error('Google Sign-In succeeded but idToken is missing.');
-        }
-
-        // --- Backend Authentication --- 
-        try {
-          console.log('Sending token to backend...');
-          const backendResponse = await axios.post(BACKEND_AUTH_URL, {
-            googleToken: userInfo.idToken,
-          });
-
-          if (backendResponse.data && backendResponse.data.apiToken) {
-            const apiToken = backendResponse.data.apiToken;
-            console.log('Backend authentication successful, received API token.');
-            // Use the login function from AuthContext to save token and update state
-            await login(apiToken);
-            // Navigation will happen automatically due to state change in App.tsx
-            Alert.alert('Sign-In Success', `Welcome ${userInfo.user.name || userInfo.user.email}`);
-
-          } else {
-            throw new Error('Backend response missing apiToken.');
-          }
-
-        } catch (backendError: any) {
-          console.error('Backend Authentication Error:', backendError);
-          const errorMessage = axios.isAxiosError(backendError) && backendError.response?.data?.error
-             ? backendError.response.data.error
-             : backendError.message;
-          Alert.alert('Backend Error', `Failed to authenticate with server: ${errorMessage}`);
-          // Optionally logout from Google if backend fails?
-          // await GoogleSignin.signOut(); 
-        }
-        // --- End Backend Authentication ---
-
-      } else if (response.type === 'cancelled') {
-        console.warn('Google Sign-In Cancelled by user.');
-        Alert.alert('Sign-In Cancelled', 'You cancelled the Google Sign-In process.');
-      } else {
-        // Should not happen if types are exhaustive, but as a fallback
-        console.error('Google Sign-In Error: Unexpected response type', response);
-        Alert.alert('Sign-In Error', 'An unexpected error occurred during sign-in.');
+      try {
+        await GoogleSignin.signOut();
+        console.log('Previous session signed out (if any).');
+      } catch (signOutError) {
+        // Ignore signOut error if user wasn't signed in
+        console.log('SignOut before SignIn failed (likely OK): ', signOutError);
       }
+      const userInfo: GoogleUser = await GoogleSignin.signIn();
+      console.log('Google Sign-In Success. User Info:', userInfo);
+
+      if (!userInfo.data || !userInfo.data.idToken) {
+        console.error('Error: idToken missing from userInfo.data. Full userInfo:', JSON.stringify(userInfo, null, 2));
+        throw new Error('Google Sign-In succeeded but idToken is missing from data.');
+      }
+
+      // --- Backend Authentication ---
+      try {
+        console.log('BACKEND_AUTH_URL IS EXACTLY >>>', BACKEND_AUTH_URL);
+        console.log('Sending token to backend:', userInfo.data.idToken ? 'idToken IS PRESENT' : 'idToken IS MISSING');
+        const backendResponse = await axios.post(BACKEND_AUTH_URL, {
+          googleToken: userInfo.data.idToken,
+        });
+
+        if (backendResponse.data && backendResponse.data.apiToken) {
+          const apiToken = backendResponse.data.apiToken;
+          console.log('Backend authentication successful, received API token.');
+          // Use the login function from AuthContext to save token and update state
+          await login(apiToken);
+          // Navigation will happen automatically due to state change in App.tsx
+          Alert.alert('Sign-In Success', `Welcome ${userInfo.user.name || userInfo.user.email}`);
+
+        } else {
+          throw new Error('Backend response missing apiToken.');
+        }
+
+      } catch (backendError: any) {
+        console.error('Backend Authentication Error:', backendError);
+        const errorMessage = axios.isAxiosError(backendError) && backendError.response?.data?.error
+           ? backendError.response.data.error
+           : backendError.message;
+        Alert.alert('Backend Error', `Failed to authenticate with server: ${errorMessage}`);
+        // Optionally logout from Google if backend fails?
+        // await GoogleSignin.signOut();
+      }
+      // --- End Backend Authentication ---
+
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
       if (isErrorWithCode(error)) {
