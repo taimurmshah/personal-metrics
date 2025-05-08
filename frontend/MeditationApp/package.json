@@ -12,13 +12,14 @@
   "dependencies": {
     "@react-native-google-signin/google-signin": "^13.2.0",
     "react": "19.0.0",
-    "react-native": "0.79.2"
+    "react-native": "0.79.2",
+    "react-native-config": "^1.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
-    "@react-native-community/cli": "18.0.0",
+    "@react-native-community/cli": "latest",
     "@react-native-community/cli-platform-android": "18.0.0",
     "@react-native-community/cli-platform-ios": "18.0.0",
     "@react-native/babel-preset": "0.79.2",

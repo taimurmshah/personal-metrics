@@ -11,8 +11,11 @@ prepare_react_native_project!
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
+  # use_frameworks! :linkage => linkage.to_sym
 end
+
+# BEGIN: Work-around for non-modular header issues in GoogleSignIn + friends (moved into RN post_install below)
+# END: Work-around
 
 target 'MeditationApp' do
   config = use_native_modules!
@@ -20,7 +23,9 @@ target 'MeditationApp' do
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :fabric_enabled => false,
+    :new_arch_enabled => false
   )
 
   post_install do |installer|
@@ -31,5 +36,15 @@ target 'MeditationApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Work-around: allow non-modular includes for GoogleSignIn-related pods
+    problematic = %w[GoogleSignIn RNGoogleSignin AppAuth GTMAppAuth GTMSessionFetcher]
+    installer.pods_project.targets.each do |target|
+      next unless problematic.include?(target.name)
+
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
   end
 end
