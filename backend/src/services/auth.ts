@@ -1,6 +1,7 @@
 import { OAuth2Client } from 'google-auth-library';
 import { SupabaseClient, User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient'; // Import the initialized client
+import jwt from 'jsonwebtoken';
 
 // Google Client ID is still needed for client-side Google Sign-in, 
 // but server-side verification might be handled by Supabase directly 
@@ -45,14 +46,27 @@ export async function handleGoogleSignIn(googleIdToken: string): Promise<AuthRes
     // }
     
     try {
-        // Use Supabase Auth to sign in with the Google ID token
-        // This handles verification, user lookup, and creation automatically.
-        const { data, error } = await supabase.auth.signInWithIdToken({
+        // Decode the JWT to check for a `nonce` claim. Supabase requires that
+        // if a nonce exists in the ID token, the **exact same** value must be
+        // provided in the `nonce` parameter. If the token has no nonce claim,
+        // `nonce` **must not** be passed.
+
+        // `jwt.decode` does not verify the signature – we are only inspecting
+        // the payload to read the optional `nonce` value.
+        const decoded = jwt.decode(googleIdToken) as { [key: string]: unknown } | null;
+        const nonceClaim = decoded && typeof decoded === 'object' ? decoded['nonce'] : undefined;
+
+        // Build params for Supabase call. Conditionally include `nonce` only
+        // when it exists in the ID token.
+        const signInParams: Parameters<typeof supabase.auth.signInWithIdToken>[0] = {
             provider: 'google',
             token: googleIdToken,
-            // Include nonce here if using nonce for replay protection
-            // nonce: 'YOUR_NONCE', 
-        });
+            ...(nonceClaim ? { nonce: String(nonceClaim) } : {}),
+        };
+
+        // Use Supabase Auth to sign in with the Google ID token.
+        // Supabase handles verification, user lookup, and creation.
+        const { data, error } = await supabase.auth.signInWithIdToken(signInParams);
 
         if (error) {
             console.error('Supabase signInWithIdToken error:', error);

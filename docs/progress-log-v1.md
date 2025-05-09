@@ -116,6 +116,13 @@ Corresponds to implementation-plan-v1.md
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
 *   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
 
+## 4. Local Testing Tasks
+
+*   [ ] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
+    *   **Problem:** Backend returned `401` with error "Passed nonce and nonce in id_token should either both exist or not." when the iOS app attempted Google Sign-In (Supabase `signInWithIdToken`).
+        *   **Attempt 1:** Investigated backend logs and confirmed `supabase.auth.signInWithIdToken` was called **without** a `nonce` parameter, while the received ID token **did** contain a `nonce` claim.
+        *   **Solution:** Updated `backend/src/services/auth.ts` to decode the Google ID token using `jsonwebtoken.decode`, extract the `nonce`, and conditionally pass it to `supabase.auth.signInWithIdToken`. After redeploying, authentication succeeds and the backend returns a JWT to the mobile app.
+
 ## 5. Deployment Tasks
 
 *   [ ] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2
@@ -148,6 +155,7 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 4:** Identified a warning in Vercel UI: "Configuration Settings in the current Production deployment differ from your current Project Settings."
         *   **Attempt 5:** Instructed user to modify Vercel UI settings: clear "Root Directory" (make it empty), turn off all "Override" toggles for Build/Output/Install commands, save, and redeploy. Still 404.
         *   **Attempt 6 (Pending):** Further investigation into the persistent Vercel UI warning and potentially trying to "reset" Vercel's framework interpretation.
+        *   **Solution:** Adjusted `backend/src/server.ts` to export the Express app and conditionally call `app.listen` only in local development. Updated `vercel.json` to build a serverless function directly from `backend/src/server.ts` and route `/api/*` to it. After redeploying, Vercel now routes requests to the backend (confirmed by `x-powered-by: Express` headers) and `/api/auth/google` returns application JSON responses. Remaining 404 on `/` is expected because the current route configuration only forwards `/api/*` to the backend.
 *   [ ] Set up TestFlight for iOS app distribution - Ref: DEP3
 *   [ ] Build and distribute iOS app via TestFlight.
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
