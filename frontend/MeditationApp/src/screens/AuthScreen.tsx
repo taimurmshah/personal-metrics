@@ -49,21 +49,21 @@ const AuthScreen: React.FC = () => {
       const userInfo: GoogleUser = await GoogleSignin.signIn();
       console.log('Google Sign-In Success. User Info:', userInfo);
 
-      if (!userInfo.idToken) {
-        console.error('Error: idToken missing from userInfo. Full userInfo:', JSON.stringify(userInfo, null, 2));
-        throw new Error('Google Sign-In succeeded but idToken is missing.');
+      if (!userInfo.data?.idToken) {
+        console.error('Error: idToken missing from userInfo.data. Full userInfo:', JSON.stringify(userInfo, null, 2));
+        throw new Error('Google Sign-In succeeded but idToken is missing from data.');
       }
 
       // --- Backend Authentication ---
       try {
         console.log('BACKEND_AUTH_URL IS EXACTLY >>>', BACKEND_AUTH_URL);
-        console.log('Sending token to backend:', userInfo.idToken ? 'idToken IS PRESENT' : 'idToken IS MISSING');
-        const backendResponse = await axios.post(BACKEND_AUTH_URL, {
-          googleToken: userInfo.idToken,
+        console.log('Sending token to backend:', userInfo.data.idToken.substring(0, 20) + '...');
+        const response = await axios.post(BACKEND_AUTH_URL, {
+          googleToken: userInfo.data.idToken
         });
 
-        if (backendResponse.data && backendResponse.data.apiToken) {
-          const apiToken = backendResponse.data.apiToken;
+        if (response.data && response.data.apiToken) {
+          const apiToken = response.data.apiToken;
           console.log('Backend authentication successful, received API token.');
           // Use the login function from AuthContext to save token and update state
           await login(apiToken);
