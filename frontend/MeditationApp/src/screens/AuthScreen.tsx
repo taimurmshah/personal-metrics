@@ -49,17 +49,17 @@ const AuthScreen: React.FC = () => {
       const userInfo: GoogleUser = await GoogleSignin.signIn();
       console.log('Google Sign-In Success. User Info:', userInfo);
 
-      if (!userInfo.data || !userInfo.data.idToken) {
-        console.error('Error: idToken missing from userInfo.data. Full userInfo:', JSON.stringify(userInfo, null, 2));
-        throw new Error('Google Sign-In succeeded but idToken is missing from data.');
+      if (!userInfo.idToken) {
+        console.error('Error: idToken missing from userInfo. Full userInfo:', JSON.stringify(userInfo, null, 2));
+        throw new Error('Google Sign-In succeeded but idToken is missing.');
       }
 
       // --- Backend Authentication ---
       try {
         console.log('BACKEND_AUTH_URL IS EXACTLY >>>', BACKEND_AUTH_URL);
-        console.log('Sending token to backend:', userInfo.data.idToken ? 'idToken IS PRESENT' : 'idToken IS MISSING');
+        console.log('Sending token to backend:', userInfo.idToken ? 'idToken IS PRESENT' : 'idToken IS MISSING');
         const backendResponse = await axios.post(BACKEND_AUTH_URL, {
-          googleToken: userInfo.data.idToken,
+          googleToken: userInfo.idToken,
         });
 
         if (backendResponse.data && backendResponse.data.apiToken) {

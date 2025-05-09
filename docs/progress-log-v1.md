@@ -122,6 +122,14 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** Backend returned `401` with error "Passed nonce and nonce in id_token should either both exist or not." when the iOS app attempted Google Sign-In (Supabase `signInWithIdToken`).
         *   **Attempt 1:** Investigated backend logs and confirmed `supabase.auth.signInWithIdToken` was called **without** a `nonce` parameter, while the received ID token **did** contain a `nonce` claim.
         *   **Solution:** Updated `backend/src/services/auth.ts` to decode the Google ID token using `jsonwebtoken.decode`, extract the `nonce`, and conditionally pass it to `supabase.auth.signInWithIdToken`. After redeploying, authentication succeeds and the backend returns a JWT to the mobile app.
+    *   **Problem:** After fixing the nonce issue, backend still returned `401` with "Bad ID token" error.
+        *   **Attempt 1:** Inspected the frontend logs and found that `userInfo.data.idToken` was undefined because the token was actually at `userInfo.idToken`.
+        *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to access the token correctly at `userInfo.idToken`. This ensures the valid token is sent to the backend.
+*   [ ] Test handling of network errors during session save.
+*   [ ] Verify RLS policies prevent cross-user data access.
+*   [ ] Perform UI testing on target iOS versions/devices.
+*   [ ] Monitor `Vercel` logs and `Supabase` usage.
+*   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
 
 ## 5. Deployment Tasks
 
