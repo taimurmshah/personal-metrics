@@ -64,7 +64,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
             *   **Monitor App Logs/Debugger:** Confirm API session token (JWT) receipt from backend and secure storage (Ref: FR5).
             *   **UI State:** App should be in a logged-in state. Test session persistence across app restarts if implemented (Ref: FR6).
         6.  **(Optional) Negative Test Cases:** Consider testing with invalid accounts, network interruptions, or invalid tokens.
-*   [ ] Test session recording flow (Start -> Pause -> Resume -> Stop -> Verify data in `Supabase`).
+*   [x] Test session recording flow (Start -> Pause -> Resume -> Stop -> Verify data in `Supabase`).
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.
