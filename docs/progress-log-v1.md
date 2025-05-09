@@ -125,6 +125,9 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** Frontend throwing error "Google Sign-In succeeded but idToken is missing" despite token being present in response.
         *   **Attempt 1:** Fixed token access path from `userInfo.idToken` to `userInfo.data.idToken` to match actual response structure from `GoogleSignin.signIn()`.
         *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to correctly access the token and added better error logging.
+    *   **Problem:** Backend returning 401 "Bad ID token" error after fixing token access path.
+        *   **Attempt 1:** Inspected request payload and found we needed to send the token in the correct structure.
+        *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to send the token in the expected format `{ googleToken: userInfo.data.idToken }` and included additional user info for future use.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.

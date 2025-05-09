@@ -59,7 +59,9 @@ const AuthScreen: React.FC = () => {
         console.log('BACKEND_AUTH_URL IS EXACTLY >>>', BACKEND_AUTH_URL);
         console.log('Sending token to backend:', userInfo.data.idToken.substring(0, 20) + '...');
         const response = await axios.post(BACKEND_AUTH_URL, {
-          googleToken: userInfo.data.idToken
+          googleToken: userInfo.data.idToken,
+          // Include additional user info if needed by backend
+          user: userInfo.data.user
         });
 
         if (response.data && response.data.apiToken) {
