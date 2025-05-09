@@ -128,6 +128,11 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** Backend returning 401 "Bad ID token" error after fixing token access path.
         *   **Attempt 1:** Inspected request payload and found we needed to send the token in the correct structure.
         *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to send the token in the expected format `{ googleToken: userInfo.data.idToken }` and included additional user info for future use.
+    *   **Problem:** Backend returning 401 "Bad ID token" again during Google Sign-In despite previous fixes.
+        *   **Attempt 1:** Verified the mobile app is sending `{ googleToken: <ID token> }` and confirmed the backend route receives this payload.
+        *   **Attempt 2:** Inspected decoded ID token claims in dev console; noted `aud` claim equals the **Web** client ID while Supabase Google provider is configured only with the **iOS** client ID, causing Supabase to reject the token.
+        *   **Attempt 3 (Planned):** Add the Web client ID (`422501331694-dg27b49qg1in08f46up9eglmbvr1gm4e.apps.googleusercontent.com`) to the *Additional Client IDs* field in Supabase Auth > Google Provider settings and redeploy backend.
+        *   **Solution (Pending):** Awaiting Supabase dashboard update and redeploy to verify 200 response.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.

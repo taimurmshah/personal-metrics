@@ -69,8 +69,16 @@ const AuthScreen: React.FC = () => {
           console.log('Backend authentication successful, received API token.');
           // Use the login function from AuthContext to save token and update state
           await login(apiToken);
+
+          // Derive a friendly name/email for the welcome message safely
+          const displayName =
+            userInfo?.data?.user?.name ??
+            userInfo?.data?.user?.givenName ??
+            userInfo?.data?.user?.email ??
+            'there';
+
           // Navigation will happen automatically due to state change in App.tsx
-          Alert.alert('Sign-In Success', `Welcome ${userInfo.user.name || userInfo.user.email}`);
+          Alert.alert('Sign-In Success', `Welcome ${displayName}`);
 
         } else {
           throw new Error('Backend response missing apiToken.');
