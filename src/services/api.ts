@@ -1,6 +1,32 @@
 import axios, { AxiosError } from 'axios';
+// Prefer runtime configuration from react-native-config (works on device)
+// but gracefully fall back to process.env (useful in web/Jest environments) and
+// finally to localhost during local development.
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+// `react-native-config` doesn't exist in Node test environments by default, so we
+// load it dynamically and swallow the error if not present.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-var-requires
+let Config: any = {};
+try {
+  // Require is used instead of import so TypeScript doesn't need type defs.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  Config = require('react-native-config').default ?? {};
+} catch {
+  // In non-RN environments (e.g. Jest) the module may be absent; that's fine.
+}
+
+// Determine the base (no trailing slash, no "/api" suffix yet)
+const rawBaseUrl =
+  Config.API_BASE_URL ||
+  process.env.API_BASE_URL ||
+  process.env.EXPO_PUBLIC_API_URL ||
+  'http://localhost:3000';
+
+// Ensure we have **no** trailing slash to avoid double‐slash when we append "/api".
+const sanitizedBaseUrl = rawBaseUrl.replace(/\/+$/, '');
+
+// Final API base URL with "/api" suffix
+const API_BASE_URL = `${sanitizedBaseUrl}/api`;
 
 interface SessionData {
   session_start_time: string; // ISO8601 string
@@ -49,7 +75,10 @@ export const saveSession = async (
     // and using the type predicate if available and recognized.
     if (error && typeof error === 'object' && 'isAxiosError' in error && (error as AxiosError).isAxiosError) {
       const axiosError = error as AxiosError; // Type assertion
-      errorMessage = axiosError.response?.data?.error || axiosError.message || 'Network request failed';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const responseData: any = axiosError.response?.data;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      errorMessage = responseData?.error || axiosError.message || 'Network request failed';
       errorDetails = {
         status: axiosError.response?.status,
         data: axiosError.response?.data,

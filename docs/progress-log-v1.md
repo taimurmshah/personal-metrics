@@ -17,6 +17,12 @@ Corresponds to implementation-plan-v1.md
 *   [x] Implement Google Auth verification & user handling logic (potentially leveraging `Supabase` Auth) - Ref: FR4
 *   [x] Write unit tests for `POST /api/sessions` endpoint (data validation, user auth) (TDD) - Ref: FR13, FR15
 *   [x] Implement `POST /api/sessions` endpoint to receive and store session data in `Supabase` - Ref: FR13, FR14, FR15
+    *   **Problem:** Mobile app received `500` ("Failed to save session") from `/api/sessions`. Backend logs showed `Supabase insertion error` due to invalid `user_id` format.
+        *   **Attempt 1:** Inspected `verifyAuthToken` middleware and discovered it attached a hard-coded `placeholder-user-id`, not the real user ID from the JWT.
+        *   **Attempt 2:** Confirmed that the API token generated in `/api/auth/google` includes a `userId` claim, so middleware should decode it with `jwt.verify` using `JWT_SECRET`.
+        *   **Attempt 3:** Implemented proper JWT verification in `backend/src/middleware/auth.ts`, extracting `userId` and attaching it as `req.user.id`. Added structured JSON logging for errors, and returned `401` on invalid/missing tokens.
+        *   **Attempt 4:** Updated `backend/src/supabaseClient.ts` to prefer `SUPABASE_SERVICE_ROLE_KEY` (if available) for server-side operations, falling back to `SUPABASE_ANON_KEY`. This removes RLS blocking issues.
+        *   **Solution:** After redeploying, `/api/sessions` now inserts rows successfully with the correct `user_id`, and the mobile app receives a `201` response confirming persistence.
 *   [x] Configure `Vercel` project & environment variables.
 
 ## 3. Frontend Tasks (React Native for iOS)
@@ -135,6 +141,12 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 1:** Re-examined `src/components/Timer.tsx` and confirmed that, although the outer conditional now returned `null` instead of `false`, the inner `<Text>` still evaluated three `saveStatus === ... && 'message'` expressions which produced boolean `false` values for the two inactive branches. React Native `<Text>` does not allow non-string children, triggering the warning.
         *   **Attempt 2:** Recognised that using boolean short-circuit `&&` expressions still left `false` values in the child list, and array literals created implicit comma separators which React might convert to string nodes. Also, newline whitespace between conditional blocks may become raw text nodes.
         *   **Solution:** Refactored `Timer.tsx` to pre-compute `statusMessage` and a `controls` React node via a `switch`. The final JSX now consists only of valid React elements (or `null`) with no stray booleans, commas, or whitespace children. This should definitively eliminate the runtime warning.
+    *   **Problem:** App throws error `{"level":"ERROR","message":"Failed to retrieve API token. Cannot save session.","userId":"TODO_GET_USER_ID"}` when stopping a session. Stack trace points to `useTimer.ts:91`.
+        *   **Attempt 1:** Reviewed `useTimer.ts`, `AuthContext.tsx`, and `storage.ts`. Found that `AuthContext` successfully retrieves the token on app startup (auto-login via `bootstrapAsync`), confirmed by user logs (`storage.ts:31 {"message":"Token retrieved successfully","hasToken":true}`). However, when `useTimer.ts`'s `handleStop` function calls `storageService.getToken()` later, this call returns `null`, leading to the error. The issue is the inconsistent behavior of `AsyncStorage.getItem(TOKEN_KEY)`.
+        *   **Attempt 2 (Logged):** Added detailed logging to `src/utils/storage.ts`'s `getToken` function (with a `caller` param) and updated `AuthContext.tsx` and `useTimer.ts` to pass caller IDs. Logs revealed `AuthContext_bootstrapAsync` was likely using an older, cached version of `getToken` (without new logs/param) which *did* get the token. `useTimer_handleStop` used the *new* `getToken` but `AsyncStorage.getItem` returned `null` for it.
+        *   **Attempt 3:** Suspected a bundler/caching issue causing module desynchronization. Recommended thoroughly cleaning Metro cache, iOS build artifacts, and reinstalling Pods before retesting.
+        *   **Attempt 4 (Code Audit):** Performed deep audit of codebase. Discovered **two separate implementations** of `storage.ts` (`src/utils/storage.ts` and `frontend/MeditationApp/src/utils/storage.ts`) with **different `TOKEN_KEY` values** (`AUTH_TOKEN` vs `user_api_token`). `AuthContext` imported the nested version while `useTimer` imported the root version, causing tokens to be saved under one key and looked up under another.
+        *   **Solution:** Removed duplicate implementation by converting `frontend/MeditationApp/src/utils/storage.ts` into a thin re-export of the shared `src/utils/storage.ts`. This ensures a single source-of-truth for token handling and unifies `TOKEN_KEY` across the app (`AUTH_TOKEN`). Token retrieval in `useTimer_handleStop` now succeeds, allowing sessions to be saved. Verified by running the app and observing successful API calls with correct token attached.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.
@@ -200,4 +212,8 @@ Corresponds to implementation-plan-v1.md
 *   [ ] Set up TestFlight for iOS app distribution - Ref: DEP3
 *   [ ] Build and distribute iOS app via TestFlight.
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
-*   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP). 
+*   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
+*   **Problem:** `saveSession` API call fails in mobile app with `Axios error saving session` "Network Error" because it was posting to `http://localhost:3000/api/sessions` instead of the deployed Vercel backend.
+    *   **Attempt 1:** Inspected `src/services/api.ts` and found `API_BASE_URL` defaulted to `process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api'`. In the React-Native build `EXPO_PUBLIC_API_URL` was undefined, so the code fell back to `localhost`, which isn't reachable from the simulator (and in any case we want the Vercel URL).
+    *   **Attempt 2:** Confirmed that the correct base URL (`https://personal-metrics-xi.vercel.app`) already exists in the `.env` file as `API_BASE_URL` and is exposed to RN via `react-native-config` (used in `AuthScreen.tsx`). The API helper simply wasn't reading that variable.
+    *   **Solution:** Updated `src/services/api.ts` to load configuration from `react-native-config` (via a safe dynamic `require`) and to sanitise the URL to remove any trailing slash before appending `/api`. Added fallbacks to `process.env.*` for Jest/Node environments and kept `localhost` as a last resort. Also fixed a minor TypeScript issue by casting `axiosError.response?.data` to `any` when reading `.error`. After rebuilding the app the `saveSession` request is now sent to `https://personal-metrics-xi.vercel.app/api/sessions` and succeeds. 

@@ -21,7 +21,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const bootstrapAsync = async () => {
       let userToken: string | null = null;
       try {
-        userToken = await getToken();
+        userToken = await getToken('AuthContext_bootstrapAsync');
         if (userToken) {
           setApiToken(userToken);
           setIsAuthenticated(true);

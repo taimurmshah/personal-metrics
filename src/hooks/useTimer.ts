@@ -86,7 +86,7 @@ export const useTimer = (): UseTimerReturn => {
 
     if (finalTotalSeconds > 0 && sessionOverallStartTimeRef.current > 0) {
       try {
-        const token = await storageService.getToken();
+        const token = await storageService.getToken('useTimer_handleStop');
         if (!token) {
           console.error(JSON.stringify({
             level: 'ERROR',

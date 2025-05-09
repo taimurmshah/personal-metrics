@@ -1,27 +1,39 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
 // Extend Express Request type to include the 'user' property 
 interface AuthenticatedRequest extends Request {
   user?: { id: string }; 
 }
 
-// Placeholder authentication middleware
+// Authentication middleware
 export const verifyAuthToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  // In a real scenario, you would verify a token (e.g., JWT) from the Authorization header
-  // and fetch user details. For now, we'll simulate a successful authentication.
-  console.warn('Auth Middleware: Using placeholder - Attaching dummy user.');
-  
-  // Simulate finding a user based on a token
-  req.user = { id: 'placeholder-user-id' }; // Use a distinct ID for placeholder
-
-  // Ensure the token is valid (placeholder check)
+  // Verify a token (e.g., JWT) from the Authorization header and fetch user details
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
      console.warn('Auth Middleware: No Bearer token found.');
-     // For placeholder, allow request to proceed, but log it.
-     // In real implementation, return 401 here.
-     // return res.status(401).json({ error: 'Missing or invalid Bearer token' });
+     return res.status(401).json({ error: 'Missing or invalid Bearer token' });
   }
-  
-  next(); // Pass control to the next middleware or route handler
+
+  const token = authHeader.split(' ')[1];
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    console.error(JSON.stringify({ level: 'FATAL', message: 'JWT_SECRET not set in environment', source: 'verifyAuthToken' }));
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string };
+
+    if (!decoded || !decoded.userId) {
+      console.warn(JSON.stringify({ level: 'WARN', message: 'Decoded token missing userId', source: 'verifyAuthToken' }));
+      return res.status(401).json({ error: 'Invalid token payload' });
+    }
+
+    req.user = { id: decoded.userId };
+    next();
+  } catch (err) {
+    console.error(JSON.stringify({ level: 'ERROR', message: 'Token verification failed', source: 'verifyAuthToken', error: err instanceof Error ? err.message : err }));
+    return res.status(401).json({ error: 'Invalid token' });
+  }
 }; 
