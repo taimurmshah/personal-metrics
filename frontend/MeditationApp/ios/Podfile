@@ -17,6 +17,8 @@ end
 # BEGIN: Work-around for non-modular header issues in GoogleSignIn + friends (moved into RN post_install below)
 # END: Work-around
 
+ENV['RCT_NO_CODEGEN'] = '1'
+
 target 'MeditationApp' do
   config = use_native_modules!
 

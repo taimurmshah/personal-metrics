@@ -109,7 +109,32 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 1:** Suggested gathering crash logs via Xcode's Device & Simulators window or `xcrun simctl spawn booted log stream --style compact --predicate 'process == "MeditationApp"'` to identify the cause, ensuring the simulator is fully booted before launch, and testing with an older simulator (e.g., iPhone 15 / iOS 17) to rule out an iOS 18-specific issue.
         *   **Attempt 2:** Recommended a clean rebuild: remove DerivedData (`rm -rf ~/Library/Developer/Xcode/DerivedData`), run `xcodebuild clean` inside `ios`, then `npx react-native run-ios` again.
         *   **Attempt 3 (Pending):** If the crash log shows a missing Swift runtime (`libswift_Concurrency.dylib`) or similar dynamic library error, plan to switch Pods back to dynamic frameworks or update Xcode/React Native to ensure compatible Swift toolchain versions.
+*   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
+    *   **Problem:** Backend returned `401` with error "Passed nonce and nonce in id_token should either both exist or not." when the iOS app attempted Google Sign-In (Supabase `signInWithIdToken`).
+        *   **Attempt 1:** Investigated backend logs and confirmed `supabase.auth.signInWithIdToken` was called **without** a `nonce` parameter, while the received ID token **did** contain a `nonce` claim.
+        *   **Solution:** Updated `backend/src/services/auth.ts` to decode the Google ID token using `jsonwebtoken.decode`, extract the `nonce`, and conditionally pass it to `supabase.auth.signInWithIdToken`. After redeploying, authentication succeeds and the backend returns a JWT to the mobile app.
+    *   **Problem:** Frontend throwing error "Google Sign-In succeeded but idToken is missing" despite token being present in response.
+        *   **Attempt 1:** Fixed token access path from `userInfo.idToken` to `userInfo.data.idToken` to match actual response structure from `GoogleSignin.signIn()`.
+        *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to correctly access the token and added better error logging.
+    *   **Problem:** Backend returning 401 "Bad ID token" error after fixing token access path.
+        *   **Attempt 1:** Inspected request payload and found we needed to send the token in the correct structure.
+        *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to send the token in the expected format `{ googleToken: userInfo.data.idToken }` and included additional user info for future use.
+    *   **Problem:** Backend returning 401 "Bad ID token" again during Google Sign-In despite previous fixes.
+        *   **Attempt 1:** Verified the mobile app is sending `{ googleToken: <ID token> }` and confirmed the backend route receives this payload.
+        *   **Attempt 2:** Inspected decoded ID token claims in dev console; noted `aud` claim equals the **Web** client ID while Supabase Google provider is configured only with the **iOS** client ID, causing Supabase to reject the token.
+        *   **Attempt 3 (Planned):** Add the Web client ID (`422501331694-dg27b49qg1in08f46up9eglmbvr1gm4e.apps.googleusercontent.com`) to the *Additional Client IDs* field in Supabase Auth > Google Provider settings and redeploy backend.
+        *   **Solution:** Added the Web Client ID was already present; root cause shifted to frontend accessing `userInfo.user` after SDK update, causing TypeError. Patched `AuthScreen.tsx` to safely derive `displayName` from `userInfo.data.user.*`. Sign-in flow now succeeds end-to-end and app navigates to Timer screen.
 *   [ ] Test session recording flow (Start -> Pause -> Resume -> Stop -> Verify data in `Supabase`).
+    *   **Problem:** Timer screen displayed but was missing Start/Pause/Resume/Stop buttons, preventing testing.
+        *   **Attempt 1:** Reviewed `frontend/MeditationApp/src/screens/TimerScreen.tsx`. Found the `Timer` component was commented out/not imported.
+        *   **Attempt 2:** Attempted to import `Timer` from `../../components/Timer`. Linter error: "Cannot find module".
+        *   **Attempt 3:** Used `file_search` to locate `Timer.tsx` at `src/components/Timer.tsx`.
+        *   **Attempt 4:** Corrected import path in `TimerScreen.tsx` to `../../../../src/components/Timer`.
+        *   **Solution:** `TimerScreen.tsx` now imports and renders the `Timer` component using the correct path `../../../../src/components/Timer`. The static timer display was removed as the `Timer` component handles this.
+    *   **Problem:** App still throws "Text strings must be rendered within a <Text> component" originating from `Timer.tsx` because boolean values (`false`) were being rendered inside a `<Text>` element due to the `&&` conditional expressions.
+        *   **Attempt 1:** Re-examined `src/components/Timer.tsx` and confirmed that, although the outer conditional now returned `null` instead of `false`, the inner `<Text>` still evaluated three `saveStatus === ... && 'message'` expressions which produced boolean `false` values for the two inactive branches. React Native `<Text>` does not allow non-string children, triggering the warning.
+        *   **Attempt 2:** Recognised that using boolean short-circuit `&&` expressions still left `false` values in the child list, and array literals created implicit comma separators which React might convert to string nodes. Also, newline whitespace between conditional blocks may become raw text nodes.
+        *   **Solution:** Refactored `Timer.tsx` to pre-compute `statusMessage` and a `controls` React node via a `switch`. The final JSX now consists only of valid React elements (or `null`) with no stray booleans, commas, or whitespace children. This should definitively eliminate the runtime warning.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.
@@ -132,7 +157,7 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 1:** Verified the mobile app is sending `{ googleToken: <ID token> }` and confirmed the backend route receives this payload.
         *   **Attempt 2:** Inspected decoded ID token claims in dev console; noted `aud` claim equals the **Web** client ID while Supabase Google provider is configured only with the **iOS** client ID, causing Supabase to reject the token.
         *   **Attempt 3 (Planned):** Add the Web client ID (`422501331694-dg27b49qg1in08f46up9eglmbvr1gm4e.apps.googleusercontent.com`) to the *Additional Client IDs* field in Supabase Auth > Google Provider settings and redeploy backend.
-        *   **Solution (Pending):** Awaiting Supabase dashboard update and redeploy to verify 200 response.
+        *   **Solution:** Added the Web Client ID was already present; root cause shifted to frontend accessing `userInfo.user` after SDK update, causing TypeError. Patched `AuthScreen.tsx` to safely derive `displayName` from `userInfo.data.user.*`. Sign-in flow now succeeds end-to-end and app navigates to Timer screen.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.

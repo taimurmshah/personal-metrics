@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext'; // Import useAuth if needed for logout etc.
+import Timer from '../../../../src/components/Timer'; // Corrected import path for Timer component
 
 const TimerScreen: React.FC = () => {
   // const { logout } = useAuth(); // Example: Get logout function if needed
@@ -8,9 +9,9 @@ const TimerScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Timer Screen</Text>
-      <Text style={styles.timerDisplay}>00:00:00</Text>
-      {/* Placeholder for Timer controls */}
-      {/* <Button title="Start" onPress={() => {}} /> */}
+      {/* <Text style={styles.timerDisplay}>00:00:00</Text> */}
+      {/* The Timer component will now display the time and controls */}
+      <Timer />
       {/* <Button title="Logout" onPress={logout} /> */}
     </View>
   );

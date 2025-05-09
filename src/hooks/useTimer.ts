@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import * as apiService from '@/services/api';
-import * as storageService from '@/utils/storage';
+import * as apiService from '../services/api';
+import * as storageService from '../utils/storage';
 
 export type TimerStatus = 'initial' | 'running' | 'paused' | 'stopped';
 export type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
@@ -86,7 +86,7 @@ export const useTimer = (): UseTimerReturn => {
 
     if (finalTotalSeconds > 0 && sessionOverallStartTimeRef.current > 0) {
       try {
-        const token = await storageService.getApiToken();
+        const token = await storageService.getToken();
         if (!token) {
           console.error(JSON.stringify({
             level: 'ERROR',

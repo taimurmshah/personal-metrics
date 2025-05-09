@@ -34,7 +34,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Implement handling of API responses (success/error) and UI reset - Ref: FR12, NF5
 
 ## 4. Local Testing Tasks
-*   [ ] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
+*   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
     *   **Testing Approach & Steps:**
         1.  **Prerequisites:**
             *   Ensure your React Native development environment is correctly set up for iOS (simulator or physical device).

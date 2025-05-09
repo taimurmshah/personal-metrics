@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { useTimer } from '../../hooks/useTimer'; // Adjusted path
+import { useTimer, UseTimerReturn, TimerStatus } from '../hooks/useTimer'; // Corrected import path & import types
 
 // Utility function to format seconds into HH:MM:SS or MM:SS
 const formatTime = (totalSeconds: number): string => {
@@ -19,52 +19,64 @@ const formatTime = (totalSeconds: number): string => {
 };
 
 interface TimerProps {
-  onSessionComplete?: (duration: number) => void;
+  // onSessionComplete is handled by the useTimer hook now directly via its handleStop
 }
 
-const Timer: React.FC<TimerProps> = ({ onSessionComplete }) => {
+const Timer: React.FC<TimerProps> = () => {
   const {
-    seconds,
-    isRunning,
-    isPaused,
+    time, // Changed from seconds
+    status, // Changed from isRunning/isPaused
     saveStatus,
-    start,
-    pause,
-    resume,
-    stop,
-  } = useTimer();
+    handleStart, // Changed from start
+    handlePause, // Changed from pause
+    handleResume, // Changed from resume
+    handleStop, // Changed from stop
+  }: UseTimerReturn = useTimer();
 
-  const handleStopPress = () => {
-    stop(onSessionComplete); // Pass the onSessionComplete callback to the hook's stop function
+  // The useTimer hook's handleStop now handles the logic internally,
+  // including calling an onComplete callback if that pattern is maintained within the hook.
+  // For this component, we just call handleStop.
+  const handleStopPress = async () => {
+    await handleStop(); 
   };
+
+  // Determine status message
+  let statusMessage: string | null = null;
+  if (saveStatus === 'saving') statusMessage = 'Saving session...';
+  else if (saveStatus === 'success') statusMessage = 'Session saved successfully!';
+  else if (saveStatus === 'error') statusMessage = 'Error: Could not save session.';
+
+  // Determine control buttons based on timer status
+  let controls: React.ReactNode = null;
+  switch (status) {
+    case 'initial':
+      controls = <Button title="Start" onPress={handleStart} testID="start-button" />;
+      break;
+    case 'running':
+      controls = (
+        <>
+          <Button title="Pause" onPress={handlePause} testID="pause-button" />
+          <Button title="Stop" onPress={handleStopPress} testID="stop-button" />
+        </>
+      );
+      break;
+    case 'paused':
+      controls = (
+        <>
+          <Button title="Resume" onPress={handleResume} testID="resume-button" />
+          <Button title="Stop" onPress={handleStopPress} testID="stop-button" />
+        </>
+      );
+      break;
+    default:
+      controls = null;
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.timeDisplay}>{formatTime(seconds)}</Text>
-      {(saveStatus === 'saving' || saveStatus === 'success' || saveStatus === 'error') && (
-        <Text style={styles.statusMessage}>
-          {saveStatus === 'saving' && 'Saving session...'}
-          {saveStatus === 'success' && 'Session saved successfully!'}
-          {saveStatus === 'error' && 'Error: Could not save session.'}
-        </Text>
-      )}
-      <View style={styles.controls}>
-        {!isRunning && !isPaused && (
-          <Button title="Start" onPress={start} testID="start-button" />
-        )}
-        {isRunning && !isPaused && (
-          <>
-            <Button title="Pause" onPress={pause} testID="pause-button" />
-            <Button title="Stop" onPress={handleStopPress} testID="stop-button" />
-          </>
-        )}
-        {isPaused && (
-          <>
-            <Button title="Resume" onPress={resume} testID="resume-button" />
-            <Button title="Stop" onPress={handleStopPress} testID="stop-button" />
-          </>
-        )}
-      </View>
+      <Text style={styles.timeDisplay}>{formatTime(time)}</Text>
+      {statusMessage && <Text style={styles.statusMessage}>{statusMessage}</Text>}
+      <View style={styles.controls}>{controls}</View>
     </View>
   );
 };
