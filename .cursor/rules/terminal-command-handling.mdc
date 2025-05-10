@@ -1,0 +1,40 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Terminal Command Handling
+
+## Purpose
+
+This rule changes how terminal commands are executed during AI assistant interactions. Instead of having the AI execute commands directly, it will request that you run them in your own terminal.
+
+## Implementation Details
+
+When the AI needs to run a terminal command:
+
+1. The AI will **not** use the `run_terminal_cmd` tool to execute commands directly.
+2. Instead, it will:
+   - Clearly indicate what command needs to be run
+   - Provide the exact command to copy/paste
+   - Explain what the command does and why it's needed
+   - Ask you to provide feedback on the results after running it
+   - Wait for your response before proceeding
+
+3. The AI will pause its workflow until you confirm you've run the command and provide feedback about the results.
+
+## Example Interaction
+
+**AI**: I need to install the required package. Please run this in your terminal:
+
+```bash
+cd frontend/MeditationApp && npm install expo-linear-gradient
+```
+
+This command will install the expo-linear-gradient package needed for implementing the background gradient.
+
+Please let me know once you've run this command and what the result was.
+
+**User**: Done, it installed successfully.
+
+**AI**: Great! Now I'll proceed with implementing the gradient in the TimerScreen component.

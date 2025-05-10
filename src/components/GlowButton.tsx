@@ -6,7 +6,7 @@ interface GlowButtonProps {
   onPress: () => void;
   /**
    * Optional size definition so we can use the same component for different button roles.
-   * large ≈ 200px, medium ≈ 140px, small ≈ 100px diameter.
+   * large ≈ 170px, medium ≈ 120px, small ≈ 85px diameter.
    */
   size?: 'large' | 'medium' | 'small';
   /**
@@ -16,9 +16,9 @@ interface GlowButtonProps {
 }
 
 const SIZE_MAP: Record<NonNullable<GlowButtonProps['size']>, number> = {
-  large: 200,
-  medium: 140,
-  small: 100,
+  large: 170,
+  medium: 120,
+  small: 85,
 };
 
 const GlowButton: React.FC<GlowButtonProps> = ({ label, onPress, size = 'medium', testID }) => {
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.35)',
     // iOS shadow
-    shadowColor: '#F6C667',
+    shadowColor: '#6366F1',
     shadowOpacity: 0.9,
     shadowRadius: 15,
     shadowOffset: { width: 0, height: 0 },
@@ -75,10 +75,10 @@ const styles = StyleSheet.create({
   innerCircle: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F6C667', // Warm golden tone
+    backgroundColor: '#6366F1', // Indigo purple
   },
   label: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // White text for contrast
     fontSize: 22,
     fontWeight: '600',
   },

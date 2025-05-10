@@ -12,6 +12,7 @@ import {
   StyleSheet,
   useColorScheme,
   Text,
+  View,
 } from 'react-native';
 
 import { Colors } from 'react-native/Libraries/NewAppScreen';
@@ -29,13 +30,20 @@ function AppContent(): React.ReactElement {
     flex: 1, // Ensure SafeAreaView takes full height
   };
 
+  // If authenticated, render TimerScreen directly without wrapping it in SafeAreaView
+  // because TimerScreen has its own SafeAreaView handling
+  if (isAuthenticated) {
+    return <TimerScreen />;
+  }
+
+  // For non-authenticated state (AuthScreen), keep using SafeAreaView
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      {isAuthenticated ? <TimerScreen /> : <AuthScreen />}
+      <AuthScreen />
     </SafeAreaView>
   );
 }
