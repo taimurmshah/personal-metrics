@@ -32,6 +32,12 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Write tests for sending session data to backend API on Stop (TDD, mocking the API call) - Ref: FR12, FR14
 *   [x] Implement API call to `POST /api/sessions` on Stop (using fetch or a library like Axios) - Ref: FR12, FR14
 *   [x] Implement handling of API responses (success/error) and UI reset - Ref: FR12, NF5
+*   [x] Write unit tests for utility function to format seconds to HH:MM:SS string (TDD) - Ref: FR7 (updated)
+*   [x] Implement utility function to format seconds to HH:MM:SS string - Ref: FR7 (updated)
+*   [x] Update Timer UI component to use HH:MM:SS formatting function for the running timer display - Ref: FR7 (updated)
+*   [x] Elicit and define specific UI styling requirements from user for Timer screen (buttons, timer display, overall layout) - Ref: FR12.1 (new)
+*   [x] Implement UI styling for Timer screen components based on defined requirements - Ref: FR12.1 (new)
+*   [ ] Add/Update tests for styled Timer screen components (e.g., snapshot tests of components) - Ref: FR12.1 (new)
 
 ## 4. Local Testing Tasks
 *   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).

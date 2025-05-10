@@ -1,22 +1,24 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTimer, UseTimerReturn, TimerStatus } from '../hooks/useTimer'; // Corrected import path & import types
+import { formatSecondsToHHMMSS as formatTime } from '../utils/timeFormatter';
+import GlowButton from './GlowButton';
 
 // Utility function to format seconds into HH:MM:SS or MM:SS
-const formatTime = (totalSeconds: number): string => {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const paddedHours = hours.toString().padStart(2, '0');
-  const paddedMinutes = minutes.toString().padStart(2, '0');
-  const paddedSeconds = seconds.toString().padStart(2, '0');
-
-  if (hours > 0) {
-    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
-  }
-  return `${paddedMinutes}:${paddedSeconds}`;
-};
+// const formatTime = (totalSeconds: number): string => {
+//   const hours = Math.floor(totalSeconds / 3600);
+//   const minutes = Math.floor((totalSeconds % 3600) / 60);
+//   const seconds = totalSeconds % 60;
+// 
+//   const paddedHours = hours.toString().padStart(2, '0');
+//   const paddedMinutes = minutes.toString().padStart(2, '0');
+//   const paddedSeconds = seconds.toString().padStart(2, '0');
+// 
+//   if (hours > 0) {
+//     return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+//   }
+//   return `${paddedMinutes}:${paddedSeconds}`;
+// };
 
 interface TimerProps {
   // onSessionComplete is handled by the useTimer hook now directly via its handleStop
@@ -50,21 +52,48 @@ const Timer: React.FC<TimerProps> = () => {
   let controls: React.ReactNode = null;
   switch (status) {
     case 'initial':
-      controls = <Button title="Start" onPress={handleStart} testID="start-button" />;
+      controls = (
+        <GlowButton
+          label="Start"
+          onPress={handleStart}
+          size="medium"
+          testID="start-button"
+        />
+      );
       break;
     case 'running':
       controls = (
         <>
-          <Button title="Pause" onPress={handlePause} testID="pause-button" />
-          <Button title="Stop" onPress={handleStopPress} testID="stop-button" />
+          <GlowButton
+            label="Pause"
+            onPress={handlePause}
+            size="medium"
+            testID="pause-button"
+          />
+          <GlowButton
+            label="Stop"
+            onPress={handleStopPress}
+            size="medium"
+            testID="stop-button"
+          />
         </>
       );
       break;
     case 'paused':
       controls = (
         <>
-          <Button title="Resume" onPress={handleResume} testID="resume-button" />
-          <Button title="Stop" onPress={handleStopPress} testID="stop-button" />
+          <GlowButton
+            label="Resume"
+            onPress={handleResume}
+            size="medium"
+            testID="resume-button"
+          />
+          <GlowButton
+            label="Stop"
+            onPress={handleStopPress}
+            size="medium"
+            testID="stop-button"
+          />
         </>
       );
       break;
@@ -87,8 +116,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timeDisplay: {
-    fontSize: 48,
-    marginBottom: 20,
+    fontSize: 64,
+    marginBottom: 40,
+    color: '#FFFFFF',
+    letterSpacing: 2,
+    fontVariant: ['tabular-nums'], // monospaced numbers if supported
   },
   statusMessage: {
     fontSize: 16,
@@ -97,8 +129,10 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '80%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    columnGap: 20,
+    flexWrap: 'nowrap',
   },
 });
 

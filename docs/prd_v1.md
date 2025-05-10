@@ -41,7 +41,7 @@
 
 ### 4.2 Timer Interface & Control
 
-* **FR7:** The main screen will display a timer, initially showing `00:00:00` (HH:MM:SS format).
+* **FR7:** The main screen will display a timer. Initially, it will show `00:00:00`. The running timer display must be in HH:MM:SS (hours:minutes:seconds) format.
 * **FR8:** Below the timer, a single "Start" button will be visible initially.
 * **FR9:** Tapping "Start" performs the following:
     * Records the current timestamp as the `session_start_time`.
@@ -60,6 +60,7 @@
     * Resets the timer display to `00:00:00`.
     * Hides the "Pause"/"Resume" and "Stop" buttons.
     * Displays the "Start" button again.
+* **FR12.1:** The Timer screen components (timer display, Start/Pause/Resume/Stop buttons, and overall layout) must be styled for improved visual appeal and user experience. Specific styling details will be provided by the user.
 
 ### 4.3 Data Persistence
 

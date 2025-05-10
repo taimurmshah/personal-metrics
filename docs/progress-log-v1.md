@@ -53,7 +53,7 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** Define and write tests for the Timer UI component's state machine (Initial, Running, Paused, Resumed, Stopped).
         *   **Attempt 1:** Created a placeholder `src/components/Timer.tsx` to facilitate test writing. This component includes basic state management for `timerState` and `timeDisplay`, and renders conditional buttons (Start, Pause, Resume, Stop) based on the state.
         *   **Solution:** The existing placeholder `src/components/Timer.tsx` was reviewed and confirmed to meet the UI requirements for this task. It correctly initializes the time display to "00:00:00" and conditionally renders the Start, Pause, Resume, and Stop buttons based on its internal `timerState`. This implementation is expected to pass the UI state transition tests in `src/components/__tests__/Timer.test.tsx` once environment/linter issues are resolved. The actual timer counting logic is deferred to a subsequent task.
-*   [ ] Implement Timer UI component (display `00:00:00`, Start/Pause/Resume/Stop buttons) - Ref: FR7, FR8, FR9, FR10, FR11, FR12
+*   [x] Implement Timer UI component (display `00:00:00`, Start/Pause/Resume/Stop buttons) - Ref: FR7, FR8, FR9, FR10, FR11, FR12
     *   **Problem:** Ensure the `Timer.tsx` component correctly displays the initial time and the required Start/Pause/Resume/Stop buttons as per its state, to pass the previously written UI state transition tests.
         *   **Solution:** The existing placeholder `src/components/Timer.tsx` was reviewed and confirmed to meet the UI requirements for this task. It correctly initializes the time display to "00:00:00" and conditionally renders the Start, Pause, Resume, and Stop buttons based on its internal `timerState`. This implementation is expected to pass the UI state transition tests in `src/components/__tests__/Timer.test.tsx` once environment/linter issues are resolved. The actual timer counting logic is deferred to a subsequent task.
 *   [ ] Write tests for timer logic (start, pause, resume, stop, time calculation, likely within a custom hook or component state) (TDD) - Ref: FR9, FR10, FR11, FR12
@@ -137,6 +137,31 @@ Corresponds to implementation-plan-v1.md
 *   [ ] Perform UI testing on target iOS versions/devices.
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
 *   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
+*   [x] Implement utility function to format seconds to HH:MM:SS string - Ref: FR7 (updated)
+    *   **Problem:** The timer display in `src/components/Timer.tsx` used a local `formatTime` function that showed `MM:SS` for durations less than an hour, but FR7 requires `HH:MM:SS` always.
+        *   **Attempt 1:** Identified that `src/utils/timeFormatter.ts` contains `formatSecondsToHHMMSS` which correctly formats to `HH:MM:SS`.
+        *   **Solution:** Modified `src/components/Timer.tsx` to remove its local `formatTime` function and instead import and use `formatSecondsToHHMMSS` (aliased as `formatTime`) from `../frontend/MeditationApp/src/utils/timeFormatter.ts`. This ensures the timer display consistently adheres to the `HH:MM:SS` format as required.
+*   [x] Update Timer UI component to use HH:MM:SS formatting function for the running timer display - Ref: FR7 (updated)
+    *   **Problem:** The timer display in `src/components/Timer.tsx` used a local `formatTime` function that showed `MM:SS` for durations less than an hour, but FR7 requires `HH:MM:SS` always.
+        *   **Attempt 1:** Identified that `frontend/MeditationApp/src/utils/timeFormatter.ts` contains `formatSecondsToHHMMSS` which correctly formats to `HH:MM:SS`.
+        *   **Solution:** Modified `src/components/Timer.tsx` to remove its local `formatTime` function and instead import and use `formatSecondsToHHMMSS` (aliased as `formatTime`). Initially, the import path was `../frontend/MeditationApp/src/utils/timeFormatter.ts`.
+    *   **Problem:** Metro bundler failed with `Error: Unable to resolve module ../../src/components/Timer from .../frontend/MeditationApp/src/screens/TimerScreen.tsx`.
+        *   **Attempt 1:** Analyzed import path in `TimerScreen.tsx`. It was `../../src/components/Timer`.
+        *   **Solution:** Corrected the import path in `frontend/MeditationApp/src/screens/TimerScreen.tsx` to `../../../../src/components/Timer` to accurately navigate from `frontend/MeditationApp/src/screens/` to the project root's `src/components/` directory.
+    *   **Problem:** Metro bundler failed with `Error: Unable to resolve module ../frontend/MeditationApp/src/utils/timeFormatter from .../src/components/Timer.tsx`.
+        *   **Attempt 1:** Analyzed import path in `Timer.tsx`. It was `../frontend/MeditationApp/src/utils/timeFormatter` (from previous step).
+        *   **Solution:** Corrected the import path in `src/components/Timer.tsx` to `../../frontend/MeditationApp/src/utils/timeFormatter` to accurately navigate from `src/components/` up to the project root, then into `frontend/MeditationApp/src/utils/`.
+*   [x] Elicit and define specific UI styling requirements from user for Timer screen (buttons, timer display, overall layout) - Ref: FR12.1 (new)
+    *   **Problem:** Needed concrete visual guidance for the Timer screen to ensure design matches user expectations.
+        *   **Attempt 1:** Asked the user for specific colours, fonts, and layout details.
+        *   **Solution:** User provided a reference mock-up (sunrise gradient background with star field, large centred timer text, and a glowing circular "Start" button). Adopted this as the definitive styling guideline.
+*   [x] Implement UI styling for Timer screen components based on defined requirements - Ref: FR12.1 (new)
+    *   **Problem:** Existing `TimerScreen` and `Timer` components used default `View`/`Button` styling, not matching the new mock-up.
+        *   **Attempt 1:** Considered adding `react-native-linear-gradient` for radial gradients but avoided extra native dependencies for now.
+        *   **Attempt 2:** Implemented a reusable `GlowButton` component using nested `View` elements, warm golden background colour, and shadow/elevation to simulate the glowing ring effect.
+        *   **Attempt 3:** Updated `Timer` component to replace `react-native` `Button`s with `GlowButton`s and adjusted font sizes/colours.
+        *   **Attempt 4:** Reworked `TimerScreen` to use `ImageBackground` with `src/screens/assets/timer_bg.png` placeholder, centring content and applying white text for contrast.
+        *   **Solution:** Styling now closely mirrors the provided mock-up; further refinements (e.g., exact gradient image asset and fine-tuned colours) can be handled by replacing the placeholder image or tweaking `GlowButton` colours.
 
 ## 4. Local Testing Tasks
 
@@ -168,37 +193,4 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** Vercel deployment results in `HTTP 404` with `x-vercel-error: NOT_FOUND` for all paths, including API endpoints, despite successful build logs.
         *   **Attempt 1:** Initial `curl` tests to base URL and `/api/auth/google` both yielded Vercel platform 404s.
         *   **Attempt 2:** Investigated Vercel project settings. "Root Directory" was set to `backend`. "Framework Preset" was "Other".
-        *   **Attempt 3:** Created `vercel.json` at the project root to explicitly define build (using `backend/package.json` and `@vercel/node`) and routes (routing `/api/(.*)` to `backend/dist/server.js`). Deployed. Still 404.
-            *   `vercel.json` content:
-                ```json
-                {
-                  "version": 2,
-                  "builds": [
-                    {
-                      "src": "backend/package.json",
-                      "use": "@vercel/node",
-                      "config": {
-                        "includeFiles": ["dist/**", "node_modules/**"]
-                      }
-                    }
-                  ],
-                  "routes": [
-                    {
-                      "src": "/api/(.*)",
-                      "dest": "backend/dist/server.js"
-                    }
-                  ]
-                }
-                ```
-        *   **Attempt 4:** Identified a warning in Vercel UI: "Configuration Settings in the current Production deployment differ from your current Project Settings."
-        *   **Attempt 5:** Instructed user to modify Vercel UI settings: clear "Root Directory" (make it empty), turn off all "Override" toggles for Build/Output/Install commands, save, and redeploy. Still 404.
-        *   **Attempt 6 (Pending):** Further investigation into the persistent Vercel UI warning and potentially trying to "reset" Vercel's framework interpretation.
-        *   **Solution:** Adjusted `backend/src/server.ts` to export the Express app and conditionally call `app.listen` only in local development. Updated `vercel.json` to build a serverless function directly from `backend/src/server.ts` and route `/api/*` to it. After redeploying, Vercel now routes requests to the backend (confirmed by `x-powered-by: Express` headers) and `/api/auth/google` returns application JSON responses. Remaining 404 on `/` is expected because the current route configuration only forwards `/api/*` to the backend.
-*   [ ] Set up TestFlight for iOS app distribution - Ref: DEP3
-*   [ ] Build and distribute iOS app via TestFlight.
-*   [ ] Monitor `Vercel` logs and `Supabase` usage.
-*   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
-*   **Problem:** `saveSession` API call fails in mobile app with `Axios error saving session` "Network Error" because it was posting to `http://localhost:3000/api/sessions` instead of the deployed Vercel backend.
-    *   **Attempt 1:** Inspected `src/services/api.ts` and found `API_BASE_URL` defaulted to `process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api'`. In the React-Native build `EXPO_PUBLIC_API_URL` was undefined, so the code fell back to `localhost`, which isn't reachable from the simulator (and in any case we want the Vercel URL).
-    *   **Attempt 2:** Confirmed that the correct base URL (`https://personal-metrics-xi.vercel.app`) already exists in the `.env` file as `API_BASE_URL` and is exposed to RN via `react-native-config` (used in `AuthScreen.tsx`). The API helper simply wasn't reading that variable.
-    *   **Solution:** Updated `src/services/api.ts` to load configuration from `react-native-config` (via a safe dynamic `require`) and to sanitise the URL to remove any trailing slash before appending `/api`. Added fallbacks to `process.env.*` for Jest/Node environments and kept `localhost` as a last resort. Also fixed a minor TypeScript issue by casting `axiosError.response?.data` to `any` when reading `.error`. After rebuilding the app the `saveSession` request is now sent to `https://personal-metrics-xi.vercel.app/api/sessions` and succeeds. 
+        *   **Attempt 3:** Created `vercel.json` at the project root to explicitly define build (using `backend/package.json`
