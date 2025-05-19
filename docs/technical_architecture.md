@@ -18,6 +18,10 @@
     *   Interacts with the Backend API for authentication and saving session data.
     *   Manages local timer state (start, pause, resume, stop).
     *   Securely stores the API session token (e.g., using AsyncStorage or a secure storage solution for React Native).
+    *   **Weekly Summary Panel & Analytics Screens (NEW):**
+        * Displays a 7-day bar graph and average on the Timer screen.
+        * Navigates to a dedicated Analytics screen with interactive charts for multiple date ranges.
+        * Fetches aggregated data from the new analytics API endpoints.
 *   **Backend API (`Node.js`/`TypeScript` on `Vercel`):**
     *   Provides RESTful endpoints for the iOS app.
     *   Handles Google ID token verification (potentially via `Supabase` Auth helpers).
@@ -25,6 +29,7 @@
     *   Issues and validates API session tokens (e.g., JWT).
     *   Receives session data from the iOS app.
     *   Interacts with the `Supabase` database to store user and session data.
+    *   **Analytics & Reporting Logic (NEW):** Provides aggregated meditation statistics per user (daily totals, averages) for predefined ranges. Exposes new analytics API endpoints.
 *   **`Supabase` Database (`PostgreSQL`):**
     *   Persistently stores user account information (leveraging `Supabase` Auth).
     *   Persistently stores meditation session records (`MeditationSessions` table).
@@ -79,6 +84,21 @@ sequenceDiagram
     React Native App->>React Native App: Reset Timer UI to initial state
 ```
 
+### 3.3 Fetching Analytics Data (NEW)
+
+```mermaid
+sequenceDiagram
+    participant React Native App
+    participant Backend API (Vercel)
+    participant Supabase DB
+
+    React Native App->>Backend API (Vercel): GET /api/analytics?range=1m (JWT)
+    Backend API (Vercel)->>Supabase DB: Aggregate query (daily totals within range)
+    Supabase DB-->>Backend API (Vercel): Result set (daily totals)
+    Backend API (Vercel)-->>React Native App: JSON { days: [...], average: X }
+    React Native App->>React Native App: Render bar/line chart
+```
+
 ## 4. API Specification
 
 *(Note: Base URL assumed to be the `Vercel` deployment URL)*
@@ -98,6 +118,25 @@ sequenceDiagram
         *   **Response (400 Bad Request):** `{ "error": "Invalid session data format" }`
         *   **Response (401 Unauthorized):** `{ "error": "Invalid or missing API token" }`
         *   **Response (500 Internal Server Error):** `{ "error": "Failed to save session" }`
+*   **Analytics Endpoint (NEW):**
+    *   **`GET /api/analytics`**
+        *   **Description:** Returns aggregated meditation statistics for the authenticated user.
+        *   **Query Parameters:**
+            *   `range` (string, required): Accepted values — `7d`, `1m`, `3m`, `6m`, `1y`, `3y`, `5y`.
+        *   **Headers:** `Authorization: Bearer <apiToken>`
+        *   **Response (200 OK):**
+            ```json
+            {
+              "range": "7d",
+              "startDate": "2025-05-01",
+              "endDate": "2025-05-07",
+              "dailyTotals": [30, 0, 25, 40, 0, 20, 35],
+              "averageMinutes": 21.4
+            }
+            ```
+        *   **Response (400 Bad Request):** `{ "error": "Unsupported range value" }`
+        *   **Response (401 Unauthorized):** `{ "error": "Invalid or missing API token" }`
+        *   **Response (500 Internal Server Error):** `{ "error": "Failed to aggregate data" }`
 
 ## 5. Database Schema (`Supabase`/`PostgreSQL`)
 
@@ -123,11 +162,10 @@ sequenceDiagram
     *   Communication Protocol: HTTPS.
     *   Data Format: JSON.
     *   HTTP Client: `axios` is the preferred library for making HTTP requests.
-    *   Authentication: The React Native App sends the Google Token/Code to the backend's `/api/auth/google` endpoint. The backend responds with an API Session Token (JWT). Subsequent requests from the React Native app to protected endpoints (like `POST /api/sessions`) must include this token in the `Authorization: Bearer <token>` header.
+    *   Authentication: The React Native App sends the Google Token/Code to the backend's `/api/auth/google` endpoint. The backend responds with an API Session Token (JWT). Subsequent requests from the React Native app to protected endpoints (like `POST /api/sessions` and `GET /api/analytics`) must include this token in the `Authorization: Bearer <token>` header.
 *   **Backend API <-> `Supabase`:**
     *   Communication: The `Node.js` backend uses a `PostgreSQL` client library (e.g., `pg` or `Supabase`'s JS library) to connect securely to the `Supabase` database instance.
     *   Authentication: Connection uses database credentials securely managed by the `Vercel` environment variables.
     *   Operations: The backend executes SQL queries (or uses `Supabase` client methods) to interact with the `auth.users` and `public.MeditationSessions` tables, respecting RLS policies enforced by `Supabase`.
 *   **React Native App <-> Google:**
     *   Communication: Uses a React Native Google Sign-In library, following Google's OAuth 2.0 protocol securely over HTTPS.
-``` 

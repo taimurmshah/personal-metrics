@@ -8,6 +8,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Set up `Supabase` project.
 *   [x] Implement `Supabase` Row Level Security (RLS) policies for `MeditationSessions` (users can only access their own data) - Ref: NF3, DB3
 *   [x] Set up `Supabase` Auth for Google Sign-In - Ref: FR1-FR6, DB3
+*   [ ] (Optional) Create a database view or SQL function to aggregate `MeditationSessions` by day for faster analytics queries (e.g., `daily_user_meditation_minutes`) - Ref: FR24
 
 ## 2. Backend Tasks (`Node.js`/`TypeScript` on `Vercel`)
 *   [x] Set up `Node.js`/`TypeScript` project (`Express.js`).
@@ -16,6 +17,8 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Write unit tests for `POST /api/sessions` endpoint (data validation, user auth) (TDD) - Ref: FR13, FR15
 *   [x] Implement `POST /api/sessions` endpoint to receive and store session data in `Supabase` - Ref: FR13, FR14, FR15
 *   [x] Configure `Vercel` project & environment variables.
+*   [ ] Write unit tests for `GET /api/analytics` endpoint (range validation, user auth, data aggregation) (TDD) - Ref: FR23, FR24, FR25
+*   [ ] Implement `GET /api/analytics` endpoint to return aggregated meditation stats - Ref: FR23, FR24, FR25
 
 ## 3. Frontend Tasks (React Native for iOS)
 *   [x] Set up React Native Project (targeting iOS initially).
@@ -38,6 +41,14 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Elicit and define specific UI styling requirements from user for Timer screen (buttons, timer display, overall layout) - Ref: FR12.1 (new)
 *   [x] Implement UI styling for Timer screen components based on defined requirements - Ref: FR12.1 (new)
 *   [ ] Add/Update tests for styled Timer screen components (e.g., snapshot tests of components) - Ref: FR12.1 (new)
+*   [ ] Write unit/integration tests for Weekly Summary panel component (TDD) - Ref: FR18, FR19
+*   [ ] Implement Weekly Summary panel component on Timer screen (bar graph + average) - Ref: FR18
+*   [ ] Write unit/integration tests for navigation from Timer screen to Analytics screen (TDD) - Ref: FR19
+*   [ ] Implement navigation from Timer screen to Analytics screen - Ref: FR19
+*   [ ] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
+*   [ ] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
+*   [ ] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
+*   [ ] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
 
 ## 4. Local Testing Tasks
 *   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
@@ -74,6 +85,8 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.
+*   [ ] Test Weekly Summary panel data accuracy against backend for last 7 days.
+*   [ ] Test Analytics screen range selector and chart data accuracy.
 
 ## 5. Deployment Tasks
 *   [ ] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2
@@ -112,3 +125,9 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   `__tests__/screens/TimerScreen.test.tsx` - Example test file for TimerScreen
 *   `__tests__/components/Timer.test.tsx` - Example test file for Timer component
 *   `__tests__/hooks/useTimer.test.ts` - Example test file for useTimer hook
+*   `src/components/WeeklySummary.tsx` - Weekly Summary panel component
+*   `src/screens/AnalyticsScreen.tsx` - Detailed analytics screen
+*   `__tests__/components/WeeklySummary.test.tsx` - Tests for Weekly Summary component
+*   `__tests__/screens/AnalyticsScreen.test.tsx` - Tests for Analytics screen
+*   `backend/src/routes/analytics.ts` - Analytics API route handler
+*   `backend/tests/analytics.test.ts` - Backend tests for analytics endpoint

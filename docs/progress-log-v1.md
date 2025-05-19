@@ -194,3 +194,29 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 1:** Initial `curl` tests to base URL and `/api/auth/google` both yielded Vercel platform 404s.
         *   **Attempt 2:** Investigated Vercel project settings. "Root Directory" was set to `backend`. "Framework Preset" was "Other".
         *   **Attempt 3:** Created `vercel.json` at the project root to explicitly define build (using `backend/package.json`
+
+## 3. Frontend Tasks
+
+*   [ ] Write unit/integration tests for Weekly Summary panel component (TDD)
+    *   **Problem:** Need to visualise last 7 days of meditation data and compute average.
+        *   **Attempt 1:** Decided to fetch aggregated data from backend analytics endpoint instead of computing client-side to keep logic consistent with extended ranges.
+        *   **Solution:** Added new API endpoint `GET /api/analytics` in Backend Tasks and corresponding Frontend integration tasks.
+
+*   [ ] Implement Weekly Summary panel component on Timer screen (bar graph + average)
+    *   **Problem:** To embed a compact bar chart in the existing Timer screen without cluttering UI.
+        *   **Attempt 1:** Chose `react-native-svg-charts` for lightweight bar charts.
+        *   **Solution:** Scheduled component implementation after tests in Implementation Plan and will follow design once provided.
+
+## 2. Backend Tasks
+
+*   [ ] Write unit tests for `GET /api/analytics` endpoint (range validation, user auth, data aggregation) (TDD)
+    *   **Problem:** Need efficient query to aggregate daily totals including zero-day filler.
+        *   **Attempt 1:** Considered SQL generate_series with LEFT JOIN on meditation sessions.
+        *   **Solution:** Decided to implement SQL using `generate_series` in Supabase; optional DB view task added to Database Tasks.
+
+## 1. Database Tasks
+
+*   [ ] (Optional) Create a database view or SQL function to aggregate `MeditationSessions` by day for faster analytics queries (e.g., `daily_user_meditation_minutes`)
+    *   **Problem:** Analytics endpoint may suffer performance issues if aggregating on the fly for long time ranges.
+        *   **Attempt 1:** Evaluate materialized view refreshed nightly.
+        *   **Solution:** Marked as optional task; will benchmark and implement if needed.

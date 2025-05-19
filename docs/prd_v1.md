@@ -15,6 +15,8 @@
 * Automatically record the start time, duration, and end date/time of each completed meditation session upon stopping.
 * Store session data securely in the backend database (`Supabase`), associated with the authenticated user.
 * Establish the basic technical architecture (React Native Frontend for iPhone, `Node.js`/`TypeScript` Backend API hosted on `Vercel`, `Supabase` [`PostgreSQL`] Database).
+* Provide users with a quick visual summary panel on the Timer screen showing their meditation time for each of the last seven days and the average daily duration.
+* Allow users to access a dedicated Analytics screen with interactive graphs for various historical ranges (last week, month, 3 months, 6 months, year, 3 years, 5 years).
 
 **3. User Stories (MVP)**
 
@@ -27,6 +29,9 @@
 * **As a logged-in user during an active or paused session,** I want to tap "Stop" to end the current meditation session.
 * **As a logged-in user,** when I tap "Stop", I want the session start time, the final duration of the just-completed session, and the completion date/time to be automatically saved to my account history in the backend database (`Supabase`) via the API hosted on `Vercel`.
 * **As a logged-in user,** after stopping a session, I want the UI to return to the initial state (timer at `00:00:00`, "Start" button visible) so I can begin a new session if desired.
+* **As a logged-in user,** I want to see a small bar graph on the Timer screen summarising my meditation duration for each of the last seven days and my average daily time so that I can quickly gauge my recent consistency.
+* **As a logged-in user,** I want to tap that bar-graph panel to navigate to an Analytics screen so that I can explore my meditation data over different time periods (last week, last month, last 3 months, last 6 months, last year, last 3 years, last 5 years).
+* **As a logged-in user on the Analytics screen,** I want to select one of the predefined ranges and view a graph that aggregates my daily meditation time over that period so that I can understand my long-term trends.
 
 **4. Functional Requirements**
 
@@ -83,6 +88,19 @@
     * `email` (Stored in `Supabase` Auth `users` table)
     * `created_at` (Timestamp with time zone, managed by `Supabase` Auth)
     *(Note: Exact schema might leverage Supabase Auth features directly)*
+
+### 4.4 Analytics & Reporting (NEW)
+
+* **FR18:** The Timer screen must display a compact "Weekly Summary" panel consisting of:
+    * A bar graph with seven bars, each representing the total meditation duration for the corresponding day in the last seven calendar days (including today).
+    * A textual indicator of the average daily meditation time (in minutes) across those seven days.
+* **FR19:** The Weekly Summary panel must be tappable/clickable. Activating it must navigate the user to the dedicated Analytics screen.
+* **FR20:** The Analytics screen must, by default, show a bar (or line) chart for the last seven days (same data as FR18) and UI controls (e.g., segmented buttons or tabs) to switch between the following ranges: last week, last month, last 3 months, last 6 months, last year, last 3 years, last 5 years.
+* **FR21:** Switching ranges must update the chart to display aggregated daily meditation durations over the selected time period. Days without sessions must be treated as 0 minutes.
+* **FR22:** The React Native app must retrieve the aggregated data via a protected backend API endpoint (see 4.3 & 4.4 additions) rather than computing it purely on the client.
+* **FR23:** A backend API endpoint (e.g., `GET /api/analytics?range=7d`) must accept a `range` query parameter indicating the desired period (e.g., `7d`, `1m`, `3m`, `6m`, `1y`, `3y`, `5y`) and return an ordered array of daily totals plus an average value for that period.
+* **FR24:** The backend must calculate daily totals by summing `duration_seconds` for each calendar day within the requested range, filling in zeros for days without sessions.
+* **FR25:** The backend response must include metadata such as the range requested, start date, end date, and computed average duration seconds.
 
 **5. Non-Functional Requirements**
 
