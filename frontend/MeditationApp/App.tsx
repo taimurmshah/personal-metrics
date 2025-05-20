@@ -11,15 +11,26 @@ import {
   StatusBar,
   StyleSheet,
   useColorScheme,
-  Text,
-  View,
 } from 'react-native';
 
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import AuthScreen from './src/screens/AuthScreen';
 // @ts-ignore - TimerScreen path is correct; TS resolves via metro
 import TimerScreen from './src/screens/TimerScreen';
+// @ts-ignore - AnalyticsScreen path is correct; TS resolves via metro
+import AnalyticsScreen from './src/screens/AnalyticsScreen'; 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+const Stack = createNativeStackNavigator();
+
+// Define the type for the stack navigator params
+export type RootStackParamList = {
+  Timer: undefined; // No params expected for Timer screen
+  Analytics: undefined; // No params expected for Analytics screen
+  // Add other screens here if needed
+};
 
 function AppContent(): React.ReactElement {
   const isDarkMode = useColorScheme() === 'dark';
@@ -30,10 +41,15 @@ function AppContent(): React.ReactElement {
     flex: 1, // Ensure SafeAreaView takes full height
   };
 
-  // If authenticated, render TimerScreen directly without wrapping it in SafeAreaView
-  // because TimerScreen has its own SafeAreaView handling
   if (isAuthenticated) {
-    return <TimerScreen />;
+    return (
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Timer">
+          <Stack.Screen name="Timer" component={TimerScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Analytics" component={AnalyticsScreen} options={{ title: 'Analytics' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
   }
 
   // For non-authenticated state (AuthScreen), keep using SafeAreaView

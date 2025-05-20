@@ -25,14 +25,12 @@ app.use('/api/auth', authRouter);
 // Mount the sessions routes - apply auth middleware here or within the router file
 app.use('/api/sessions', verifyAuthToken, sessionRouter);
 
-// In a serverless environment (e.g., Vercel), we export the Express app instance
-// and let the platform handle the request listening. For local development,
-// we start the server explicitly.
-
-if (!process.env.VERCEL) {
+// Only start the server for local dev/production environments, not during tests or serverless deployments
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
   });
 }
 
+export { app }; // Named export for testing
 export default app; 

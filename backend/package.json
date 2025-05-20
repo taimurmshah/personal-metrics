@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^13.2.0",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.7",

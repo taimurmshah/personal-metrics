@@ -17,8 +17,8 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Write unit tests for `POST /api/sessions` endpoint (data validation, user auth) (TDD) - Ref: FR13, FR15
 *   [x] Implement `POST /api/sessions` endpoint to receive and store session data in `Supabase` - Ref: FR13, FR14, FR15
 *   [x] Configure `Vercel` project & environment variables.
-*   [ ] Write unit tests for `GET /api/analytics` endpoint (range validation, user auth, data aggregation) (TDD) - Ref: FR23, FR24, FR25
-*   [ ] Implement `GET /api/analytics` endpoint to return aggregated meditation stats - Ref: FR23, FR24, FR25
+*   [x] Write unit tests for `GET /api/analytics` endpoint (range validation, user auth, data aggregation) (TDD) - Ref: FR23, FR24, FR25
+*   [x] Implement `GET /api/analytics` endpoint to return aggregated meditation stats - Ref: FR23, FR24, FR25
 
 ## 3. Frontend Tasks (React Native for iOS)
 *   [x] Set up React Native Project (targeting iOS initially).
@@ -40,13 +40,13 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Update Timer UI component to use HH:MM:SS formatting function for the running timer display - Ref: FR7 (updated)
 *   [x] Elicit and define specific UI styling requirements from user for Timer screen (buttons, timer display, overall layout) - Ref: FR12.1 (new)
 *   [x] Implement UI styling for Timer screen components based on defined requirements - Ref: FR12.1 (new)
-*   [ ] Add/Update tests for styled Timer screen components (e.g., snapshot tests of components) - Ref: FR12.1 (new)
-*   [ ] Write unit/integration tests for Weekly Summary panel component (TDD) - Ref: FR18, FR19
-*   [ ] Implement Weekly Summary panel component on Timer screen (bar graph + average) - Ref: FR18
-*   [ ] Write unit/integration tests for navigation from Timer screen to Analytics screen (TDD) - Ref: FR19
-*   [ ] Implement navigation from Timer screen to Analytics screen - Ref: FR19
-*   [ ] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
-*   [ ] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
+*   [x] Add/Update tests for styled Timer screen components (e.g., snapshot tests of components) - Ref: FR12.1 (new)
+*   [x] Write unit/integration tests for Weekly Summary panel component (TDD) - Ref: FR18, FR19
+*   [x] Implement Weekly Summary panel component on Timer screen (bar graph + average) - Ref: FR18
+*   [x] Write unit/integration tests for navigation from Timer screen to Analytics screen (TDD) - Ref: FR19
+*   [x] Implement navigation from Timer screen to Analytics screen - Ref: FR19
+*   [x] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
+*   [x] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
 *   [ ] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
 *   [ ] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
 
@@ -100,34 +100,4 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 
 *   **Architecture:** React Native Frontend (targeting iOS), `Node.js`/`TypeScript`/`Express.js` Backend API, `Supabase` (`PostgreSQL`) Database.
 *   **Authentication:** Google OAuth handled via `Supabase` Auth is the preferred approach (Ref: DB3) to simplify backend logic. The backend will verify tokens forwarded by the React Native app.
-*   **API:** RESTful API hosted on `Vercel`. Key endpoint: `POST /api/sessions`.
-*   **Data Storage:** User info potentially managed by `Supabase` Auth. Session data stored in a dedicated `MeditationSessions` table with RLS enabled.
-
-## Relevant Files
-
-*(To be populated as development progresses)*
-*   [prd_v1.md](./prd_v1.md) - Product Requirements Document
-*   `implementation-plan-v1.md` - This file
-*   `supabase/migrations/...` - Database schema migrations
-*   `supabase/seed.sql` - (Optional) Initial data seeding
-*   `backend/src/server.ts` - Main backend application file
-*   `backend/src/routes/sessions.ts` - Session API route handler
-*   `backend/src/services/auth.ts` - Authentication logic
-*   `backend/tests/...` - Backend unit/integration tests
-*   `src/App.tsx` (or `.js`) - Main application component
-*   `src/screens/AuthScreen.tsx` - Google Sign-In UI/Logic
-*   `src/screens/TimerScreen.tsx` - Main timer UI/Logic
-*   `src/components/Timer.tsx` - Timer component
-*   `src/services/api.ts` - Backend API communication
-*   `src/services/authService.ts` - Authentication related services
-*   `src/utils/storage.ts` - Secure token storage (e.g., using AsyncStorage or a secure storage library)
-*   `src/hooks/useTimer.ts` - Custom hook for timer logic (optional, could be component state)
-*   `__tests__/screens/TimerScreen.test.tsx` - Example test file for TimerScreen
-*   `__tests__/components/Timer.test.tsx` - Example test file for Timer component
-*   `__tests__/hooks/useTimer.test.ts` - Example test file for useTimer hook
-*   `src/components/WeeklySummary.tsx` - Weekly Summary panel component
-*   `src/screens/AnalyticsScreen.tsx` - Detailed analytics screen
-*   `__tests__/components/WeeklySummary.test.tsx` - Tests for Weekly Summary component
-*   `__tests__/screens/AnalyticsScreen.test.tsx` - Tests for Analytics screen
-*   `backend/src/routes/analytics.ts` - Analytics API route handler
-*   `backend/tests/analytics.test.ts` - Backend tests for analytics endpoint
+*   **API:** RESTful API hosted on `Vercel`. Key endpoint: `

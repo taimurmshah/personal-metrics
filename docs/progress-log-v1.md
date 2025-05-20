@@ -162,6 +162,25 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 3:** Updated `Timer` component to replace `react-native` `Button`s with `GlowButton`s and adjusted font sizes/colours.
         *   **Attempt 4:** Reworked `TimerScreen` to use `ImageBackground` with `src/screens/assets/timer_bg.png` placeholder, centring content and applying white text for contrast.
         *   **Solution:** Styling now closely mirrors the provided mock-up; further refinements (e.g., exact gradient image asset and fine-tuned colours) can be handled by replacing the placeholder image or tweaking `GlowButton` colours.
+*   [x] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
+    *   **Problem:** Tests created for `AnalyticsScreen.tsx` (including navigation to it) require the screen to exist and the app to have a navigation setup. The `TimerScreen` also now uses `useNavigation` hook which was causing a runtime error: "Couldn't find a navigation object".
+        *   **Attempt 1:** Create a placeholder `AnalyticsScreen.tsx` file.
+        *   **Attempt 2:** Modify `frontend/MeditationApp/App.tsx` to include `NavigationContainer` from `@react-navigation/native` and a `createNativeStackNavigator` from `@react-navigation/native-stack`. Define routes for `TimerScreen` (initial) and `AnalyticsScreen`.
+        *   **Solution:** Root navigation is now set up in `App.tsx`, resolving the runtime error and preparing for `AnalyticsScreen` implementation.
+*   [x] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
+    *   **Problem:** Need to create the `AnalyticsScreen.tsx` component to satisfy the tests and provide the analytics UI.
+        *   **Attempt 1:** Created `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx`.
+        *   **Attempt 2:** Implemented state management for start/end dates, loading, error, and fetched data.
+        *   **Attempt 3:** Added `DateTimePicker` for date selection and `LineChart` from `react-native-svg-charts` for displaying daily meditation totals.
+        *   **Attempt 4:** Included summary statistics display and basic styling.
+        *   **Attempt 5:** Created a placeholder `fetchAnalyticsData` function in `frontend/MeditationApp/src/services/api.ts` for the screen to use.
+        *   **Attempt 6:** Corrected import path for `fetchAnalyticsData` in `AnalyticsScreen.tsx`.
+        *   **Solution:** `AnalyticsScreen.tsx` is now implemented with date pickers, a chart, summary display, and loading/error handling. It uses a placeholder API service. Some linter errors related to SVG type definitions remain as the user opted not to install them for now.
+*   [ ] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
+    *   **Problem:** The `fetchAnalyticsData` function in `frontend/MeditationApp/src/services/api.ts` was a placeholder returning mock data.
+        *   **Attempt 1:** Identified the need to use `axios` for the API call, retrieve the auth token using `getToken` from `src/utils/storage.ts`, and fetch `API_BASE_URL` from `react-native-config`.
+        *   **Solution:** Updated `frontend/MeditationApp/src/services/api.ts` to implement the actual `GET /api/analytics` call. This includes sending the `Authorization` header with the JWT, passing `from` and `to` date parameters, and robust error handling for API responses and network issues, adhering to `error-logging-guidelines.mdc`. The `AnalyticsScreen.tsx` already handles loading/error states and data transformation.
+*   [ ] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
 
 ## 4. Local Testing Tasks
 
@@ -194,29 +213,3 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 1:** Initial `curl` tests to base URL and `/api/auth/google` both yielded Vercel platform 404s.
         *   **Attempt 2:** Investigated Vercel project settings. "Root Directory" was set to `backend`. "Framework Preset" was "Other".
         *   **Attempt 3:** Created `vercel.json` at the project root to explicitly define build (using `backend/package.json`
-
-## 3. Frontend Tasks
-
-*   [ ] Write unit/integration tests for Weekly Summary panel component (TDD)
-    *   **Problem:** Need to visualise last 7 days of meditation data and compute average.
-        *   **Attempt 1:** Decided to fetch aggregated data from backend analytics endpoint instead of computing client-side to keep logic consistent with extended ranges.
-        *   **Solution:** Added new API endpoint `GET /api/analytics` in Backend Tasks and corresponding Frontend integration tasks.
-
-*   [ ] Implement Weekly Summary panel component on Timer screen (bar graph + average)
-    *   **Problem:** To embed a compact bar chart in the existing Timer screen without cluttering UI.
-        *   **Attempt 1:** Chose `react-native-svg-charts` for lightweight bar charts.
-        *   **Solution:** Scheduled component implementation after tests in Implementation Plan and will follow design once provided.
-
-## 2. Backend Tasks
-
-*   [ ] Write unit tests for `GET /api/analytics` endpoint (range validation, user auth, data aggregation) (TDD)
-    *   **Problem:** Need efficient query to aggregate daily totals including zero-day filler.
-        *   **Attempt 1:** Considered SQL generate_series with LEFT JOIN on meditation sessions.
-        *   **Solution:** Decided to implement SQL using `generate_series` in Supabase; optional DB view task added to Database Tasks.
-
-## 1. Database Tasks
-
-*   [ ] (Optional) Create a database view or SQL function to aggregate `MeditationSessions` by day for faster analytics queries (e.g., `daily_user_meditation_minutes`)
-    *   **Problem:** Analytics endpoint may suffer performance issues if aggregating on the fly for long time ranges.
-        *   **Attempt 1:** Evaluate materialized view refreshed nightly.
-        *   **Solution:** Marked as optional task; will benchmark and implement if needed.
