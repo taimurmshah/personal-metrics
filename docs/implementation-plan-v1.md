@@ -56,6 +56,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
         *   [x] Add day-of-the-week labels (e.g., Mon, Tue) to the X-axis of the bar chart in `WeeklySummary.tsx`.
     *   [x] **Analytics Screen:**
         *   [x] Style Analytics screen components to meet any outstanding design requirements.
+*   [ ] Add "Longest Streak" to Analytics screen summary (Backend & Frontend) - Ref: User Request
 
 ## 4. Local Testing Tasks
 *   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).

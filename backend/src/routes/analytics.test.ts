@@ -114,6 +114,8 @@ describe('GET /api/analytics', () => {
       expect(response.body).toHaveProperty('dailyTotals');
       expect(response.body.summary).toHaveProperty('totalMinutes', 45); // (1800 + 900) / 60
       expect(response.body.summary).toHaveProperty('averageMinutesPerDay', 7.5);
+      expect(response.body.summary).toHaveProperty('currentStreak'); // Exact value depends on 'today'
+      expect(response.body.summary).toHaveProperty('longestStreak', 2); // 2023-01-02 and 2023-01-03
       expect(response.body.dailyTotals).toHaveProperty('2023-01-02', 1800);
       expect(response.body.dailyTotals).toHaveProperty('2023-01-03', 900);
     });
@@ -137,7 +139,8 @@ describe('GET /api/analytics', () => {
         totalMinutes: 0,
         averageMinutesPerDay: 0,
         daysWithSessions: 0,
-        currentStreak: 0
+        currentStreak: 0,
+        longestStreak: 0 // New assertion
       }));
       expect(response.body.dailyTotals).toEqual({});
     });

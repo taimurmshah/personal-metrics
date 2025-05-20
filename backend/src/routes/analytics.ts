@@ -118,6 +118,7 @@ const analyticsHandler: RequestHandler<ParamsDictionary, any, any, AnalyticsQuer
     // Calculate streak and additional metrics
     const sortedDays = Object.keys(dailyTotals).sort();
     const currentStreak = calculateStreak(sortedDays);
+    const longestStreak = calculateLongestStreak(sortedDays);
     const totalMinutes = Math.round(totalSeconds / 60);
 
     res.status(200).json({
@@ -127,7 +128,8 @@ const analyticsHandler: RequestHandler<ParamsDictionary, any, any, AnalyticsQuer
         totalMinutes,
         averageMinutesPerDay,
         daysWithSessions,
-        currentStreak
+        currentStreak,
+        longestStreak
       },
       dailyTotals
     });
@@ -200,4 +202,42 @@ function getPreviousDay(dateString: string): string {
   const date = new Date(dateString);
   date.setDate(date.getDate() - 1);
   return date.toISOString().split('T')[0];
+}
+
+// Helper function to calculate longest streak
+function calculateLongestStreak(sortedDaysWithSessions: string[]): number {
+  if (!sortedDaysWithSessions || sortedDaysWithSessions.length === 0) {
+    return 0;
+  }
+
+  let longestStreak = 0;
+  let currentStreak = 0;
+
+  for (let i = 0; i < sortedDaysWithSessions.length; i++) {
+    const currentDay = new Date(sortedDaysWithSessions[i]);
+    
+    if (i === 0) { // First day in the list
+      currentStreak = 1;
+    } else {
+      const previousDay = new Date(sortedDaysWithSessions[i - 1]);
+      const diffInDays = (currentDay.getTime() - previousDay.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (diffInDays === 1) {
+        currentStreak++;
+      } else {
+        // Streak broken, reset current streak
+        if (currentStreak > longestStreak) {
+          longestStreak = currentStreak;
+        }
+        currentStreak = 1; // Start new streak
+      }
+    }
+  }
+
+  // Final check for the last streak
+  if (currentStreak > longestStreak) {
+    longestStreak = currentStreak;
+  }
+
+  return longestStreak;
 } 

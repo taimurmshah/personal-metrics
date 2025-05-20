@@ -16,6 +16,7 @@ interface AnalyticsSummary {
   totalMinutes: number;
   averageMinutesPerDay: number;
   currentStreak: number;
+  longestStreak: number;
   daysWithSessions: number;
 }
 
@@ -457,6 +458,14 @@ const AnalyticsScreen = () => {
                 {data.summary.currentStreak} {data.summary.currentStreak === 1 ? 'day' : 'days'}
               </Text>
             </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Longest Streak</Text>
+              <Text style={styles.summaryValue}>
+                {data.summary.longestStreak} {data.summary.longestStreak === 1 ? 'day' : 'days'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Active Days</Text>
               <Text style={styles.summaryValue}>{data.summary.daysWithSessions}</Text>
