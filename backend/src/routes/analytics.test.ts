@@ -78,6 +78,7 @@ describe('GET /api/analytics', () => {
       { query: '?startDate=invalid-date&endDate=2023-01-07', messageKey: 'startDate.invalid' },
       { query: '?startDate=2023-01-01&endDate=invalid-date', messageKey: 'endDate.invalid' },
       { query: '?startDate=2023-01-07&endDate=2023-01-01', messageKey: 'endDate.beforeStartDate' },
+      // { query: '?startDate=2023-01-01&endDate=2024-01-02', messageKey: 'dateRange.tooLarge' }, // 366 days
     ];
 
     invalidQueries.forEach(testCase => {

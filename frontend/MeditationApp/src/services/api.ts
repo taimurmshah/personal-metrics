@@ -15,6 +15,7 @@ interface ApiAnalyticsSummary {
   currentStreak: number;
   adherenceRate: number;
   daysWithSessions: number;
+  longestStreak: number;
 }
 
 interface ApiDailyTotals {

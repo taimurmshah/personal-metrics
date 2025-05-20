@@ -68,14 +68,14 @@ const analyticsHandler: RequestHandler<ParamsDictionary, any, any, AnalyticsQuer
   const totalDaysInPeriod = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24);
 
   // Add maximum date range validation (e.g., 1 year)
-  const MAX_DATE_RANGE_DAYS = 365;
-  if (totalDaysInPeriod > MAX_DATE_RANGE_DAYS) {
-    res.status(400).json({ 
-      message: 'dateRange.tooLarge', 
-      error: `Date range cannot exceed ${MAX_DATE_RANGE_DAYS} days.` 
-    });
-    return;
-  }
+  // const MAX_DATE_RANGE_DAYS = 365;
+  // if (totalDaysInPeriod > MAX_DATE_RANGE_DAYS) {
+  //   res.status(400).json({ 
+  //     message: 'dateRange.tooLarge', 
+  //     error: `Date range cannot exceed ${MAX_DATE_RANGE_DAYS} days.` 
+  //   });
+  //   return;
+  // }
 
   try {
     // Query Supabase for meditation sessions within the date range

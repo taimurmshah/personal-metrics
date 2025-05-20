@@ -56,6 +56,8 @@ const AnalyticsScreen = () => {
   // Calculate start and end dates based on the selected range
   const calculateDateRange = useCallback((range: TimeRange): { startDate: Date; endDate: Date } => {
     const endDate = new Date();
+    // Add one day to the endDate to make it inclusive for the current day's data
+    endDate.setDate(endDate.getDate() + 1);
     const startDate = new Date();
     
     switch (range) {
