@@ -200,6 +200,10 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 2:** Removed `totalSessions` and `adherenceRate` from the backend response in `backend/src/routes/analytics.ts` as they are no longer used by the frontend.
         *   **Attempt 3 (Correction):** Refined the calculation of `totalDaysInPeriod` in `backend/src/routes/analytics.ts` to be `(endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24))`. This correctly reflects the number of days in the interval `[startDate, endDate)` which aligns with how the frontend defines and displays the period (e.g., a 7-day period from '2023-01-01' to '2023-01-07' inclusive is represented by `startDate='2023-01-01'` and `endDate='2023-01-08'`).
         *   **Solution:** Updated tests in `backend/src/routes/analytics.test.ts` to reflect the corrected calculation for `averageMinutesPerDay` (e.g., expecting 7.5 for a 6-day test period with 45 total minutes).
+    *   **Problem:** The "Current Streak" in `AnalyticsScreen.tsx` displayed as "1 days" instead of "1 day".
+        *   **Solution:** Modified `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` to conditionally render "day" if `data.summary.currentStreak` is 1, and "days" otherwise.
+    *   **Problem:** The "Summary" title in `AnalyticsScreen.tsx` was static.
+        *   **Solution:** Added a `getSummaryTitle` helper function in `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` that returns a dynamic title (e.g., "One Week Summary", "One Month Summary") based on the `selectedRange`. The `Text` component for the summary title now calls this function.
 
 ## 4. Local Testing Tasks
 

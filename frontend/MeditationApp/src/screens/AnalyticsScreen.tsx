@@ -4,6 +4,7 @@ import { LineChart, Grid, XAxis, YAxis } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
 import { Defs, LinearGradient, Stop, Text as SvgText, G, Circle } from 'react-native-svg';
 import { fetchAnalyticsData } from '../services/api';
+import { useNavigation } from '@react-navigation/native';
 
 // Define interfaces for the data
 interface DailyTotal {
@@ -38,6 +39,7 @@ const AnalyticsScreen = () => {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation();
 
   const [tabLayouts, setTabLayouts] = useState<Record<TimeRange, TabLayout | null>>({
     '1W': null,
@@ -156,26 +158,32 @@ const AnalyticsScreen = () => {
     const newLayouts = {...tabLayouts, [range]: { x, width }};
     setTabLayouts(newLayouts);
 
-    const isAnyLayoutDefined = Object.values(newLayouts).some(layout => layout !== null);
+    // If this is the selected range, immediately update indicator
+    if (range === selectedRange) {
+      indicatorPositionX.setValue(x);
+      indicatorWidth.setValue(width);
+    }
 
-    // Set initial position for the first selected tab
-    if (range === selectedRange && newLayouts[range]) {
-       // Check if all layouts are available to prevent race condition
-      const allLayoutsAvailable = TIME_RANGES.every(r => newLayouts[r] !== null);
-      if (allLayoutsAvailable) {
-        const initialLayout = newLayouts[selectedRange];
-        if (initialLayout) {
-            indicatorPositionX.setValue(initialLayout.x);
-            indicatorWidth.setValue(initialLayout.width);
-        }
+    // Check if all layouts are now available
+    const allLayoutsAvailable = TIME_RANGES.every(r => newLayouts[r] !== null);
+    if (allLayoutsAvailable) {
+      // All tabs have measured, ensure selected tab is highlighted
+      const selectedLayout = newLayouts[selectedRange];
+      if (selectedLayout) {
+        indicatorPositionX.setValue(selectedLayout.x);
+        indicatorWidth.setValue(selectedLayout.width);
       }
-    } else if (range === selectedRange && !isAnyLayoutDefined && newLayouts[selectedRange]) {
-        // Fallback for initial load if selectedRange layout comes first and no indicator width is set yet
-        const initialLayout = newLayouts[selectedRange];
-        if (initialLayout) {
-            indicatorPositionX.setValue(initialLayout.x);
-            indicatorWidth.setValue(initialLayout.width);
-        }
+    }
+  };
+
+  const getSummaryTitle = (range: TimeRange): string => {
+    switch (range) {
+      case '1W': return 'One Week Summary';
+      case '1M': return 'One Month Summary';
+      case '3M': return 'Three Month Summary';
+      case '6M': return 'Six Month Summary';
+      case '1Y': return 'One Year Summary';
+      default: return 'Summary';
     }
   };
 
@@ -305,6 +313,17 @@ const AnalyticsScreen = () => {
     );
   };
 
+  // Initialize tab indicator for 1W on first render
+  useEffect(() => {
+    // Set default 1W tab indicator width to 20% of container (5 tabs)
+    const screenWidth = Platform.OS === 'ios' ? 375 : 400; // Default screen width
+    const tabWidth = (screenWidth - 32) / 5; // Accounting for paddingHorizontal in scrollContainer
+    
+    // Set indicator to 1W position (first tab)
+    indicatorWidth.setValue(tabWidth);
+    indicatorPositionX.setValue(0);
+  }, []);
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -337,112 +356,151 @@ const AnalyticsScreen = () => {
   const chartContentInset = { top: 10, bottom: 10, left: 10, right: 20 };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Meditation Analytics</Text>
+    <View style={styles.container}>
+      {/* Custom Header */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Timer</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Meditation Analytics</Text>
+        <View style={styles.rightPlaceholder} />
+      </View>
 
-      {/* Time range selector tabs */}
-      <View style={styles.timeRangeContainer}>
-        <Animated.View
-          style={[
-            styles.selectedTimeRangeTabIndicator,
-            {
-              left: indicatorPositionX,
-              width: indicatorWidth,
-            },
-          ]}
-        />
-        {TIME_RANGES.map((range) => (
-          <TouchableOpacity 
-            key={range}
-            style={styles.timeRangeTab}
-            onPress={() => handleRangeChange(range)}
-            testID={`range-${range}`}
-            onLayout={(event) => handleTabLayout(event, range)}
-          >
-            <Text 
-              style={[
-                styles.timeRangeText,
-                selectedRange === range && styles.selectedTimeRangeText
-              ]}
+      <ScrollView style={styles.scrollContainer}>
+        {/* Time range selector tabs */}
+        <View style={styles.timeRangeContainer} testID="timeRangeContainer">
+          <Animated.View
+            style={[
+              styles.selectedTimeRangeTabIndicator,
+              {
+                left: indicatorPositionX,
+                width: indicatorWidth,
+              },
+            ]}
+          />
+          {TIME_RANGES.map((range) => (
+            <TouchableOpacity 
+              key={range}
+              style={styles.timeRangeTab}
+              onPress={() => handleRangeChange(range)}
+              testID={`range-${range}`}
+              onLayout={(event) => handleTabLayout(event, range)}
             >
-              {range}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {chartData.length > 0 ? (
-        <View style={styles.chartContainer}>
-           <YAxis
-              data={chartData}
-              style={styles.yAxis}
-              contentInset={chartContentInset}
-              svg={{ fontSize: 10, fill: '#999999' }}
-              numberOfTicks={3}
-              min={0}
-              max={60}
-              formatLabel={(value) => `${value}m`}
-            />
-            <View style={styles.chartWrapper}>
-              <LineChart
-                style={{ flex: 1 }}
-                data={chartData}
-                svg={{ stroke: 'url(#gradient)', strokeWidth: 2.5 }}
-                contentInset={chartContentInset}
-                curve={shape.curveLinear}
-                yMin={0}
-                yMax={60}
+              <Text 
+                style={[
+                  styles.timeRangeText,
+                  selectedRange === range && styles.selectedTimeRangeText
+                ]}
               >
-                <Grid svg={{ stroke: '#333333' }} />
-                <Gradient />
-                {chartData.length > 0 && <MaxValueDecorator />}
-              </LineChart>
-              <XAxis
-                key={selectedRange}
-                style={styles.xAxis}
-                data={filteredXAxisChartDates}
-                formatLabel={formatXAxisLabel}
-                contentInset={{ left: chartContentInset.left, right: chartContentInset.right }}
-                svg={{ fontSize: 10, fill: '#999999' }}
-              />
-            </View>
+                {range}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      ) : (
-        <Text style={styles.centeredText}>No session data for this period to display chart.</Text>
-      )}
 
-      <View style={styles.summaryContainer}>
-        <Text style={styles.summaryTitle}>Summary</Text>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Total Minutes</Text>
-            <Text style={styles.summaryValue}>{data.summary.totalMinutes}</Text>
+        {chartData.length > 0 ? (
+          <View style={styles.chartContainer}>
+             <YAxis
+                data={chartData}
+                style={styles.yAxis}
+                contentInset={chartContentInset}
+                svg={{ fontSize: 10, fill: '#999999' }}
+                numberOfTicks={3}
+                min={0}
+                max={60}
+                formatLabel={(value) => `${value}m`}
+              />
+              <View style={styles.chartWrapper}>
+                <LineChart
+                  style={{ flex: 1 }}
+                  data={chartData}
+                  svg={{ stroke: 'url(#gradient)', strokeWidth: 2.5 }}
+                  contentInset={chartContentInset}
+                  curve={shape.curveLinear}
+                  yMin={0}
+                  yMax={60}
+                >
+                  <Grid svg={{ stroke: '#333333' }} />
+                  <Gradient />
+                  {chartData.length > 0 && <MaxValueDecorator />}
+                </LineChart>
+                <XAxis
+                  key={selectedRange}
+                  style={styles.xAxis}
+                  data={filteredXAxisChartDates}
+                  formatLabel={formatXAxisLabel}
+                  contentInset={{ left: chartContentInset.left, right: chartContentInset.right }}
+                  svg={{ fontSize: 10, fill: '#999999' }}
+                />
+              </View>
           </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Avg. Minutes/Day</Text>
-            <Text style={styles.summaryValue}>{data.summary.averageMinutesPerDay.toFixed(1)}</Text>
+        ) : (
+          <Text style={styles.centeredText}>No session data for this period to display chart.</Text>
+        )}
+
+        <View style={styles.summaryContainer}>
+          <Text style={styles.summaryTitle}>{getSummaryTitle(selectedRange)}</Text>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Total Minutes</Text>
+              <Text style={styles.summaryValue}>{data.summary.totalMinutes}</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Avg. Minutes/Day</Text>
+              <Text style={styles.summaryValue}>{data.summary.averageMinutesPerDay.toFixed(1)}</Text>
+            </View>
+          </View>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Current Streak</Text>
+              <Text style={styles.summaryValue}>
+                {data.summary.currentStreak} {data.summary.currentStreak === 1 ? 'day' : 'days'}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Active Days</Text>
+              <Text style={styles.summaryValue}>{data.summary.daysWithSessions}</Text>
+            </View>
           </View>
         </View>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Current Streak</Text>
-            <Text style={styles.summaryValue}>{data.summary.currentStreak} days</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Active Days</Text>
-            <Text style={styles.summaryValue}>{data.summary.daysWithSessions}</Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#000000',
+    paddingTop: Platform.OS === 'ios' ? 70 : 30, // Increased top padding
+  },
+  scrollContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Evenly space the items
+    marginBottom: 25, // Increased bottom margin
+    paddingHorizontal: 16,
+    height: 44, // Fixed height for header
+  },
+  backButton: {
+    width: 70, // Fixed width for better alignment
+  },
+  backButtonText: {
+    color: '#3498db',
+    fontSize: 16,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  rightPlaceholder: {
+    width: 70, // Same width as backButton for symmetry
   },
   centered: {
     flex: 1,
@@ -503,17 +561,18 @@ const styles = StyleSheet.create({
   timeRangeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 20,
-    marginBottom: 5,
+    marginTop: 10,
+    marginBottom: 15,
     paddingHorizontal: 10,
     backgroundColor: '#1A1A1A',
     borderRadius: 8,
     position: 'relative',
-    height: 40,
+    height: 44,
+    overflow: 'hidden',
   },
   timeRangeTab: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
@@ -527,11 +586,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   timeRangeText: {
     fontSize: 14,

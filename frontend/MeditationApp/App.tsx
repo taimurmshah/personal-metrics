@@ -46,7 +46,13 @@ function AppContent(): React.ReactElement {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Timer">
           <Stack.Screen name="Timer" component={TimerScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Analytics" component={AnalyticsScreen} options={{ title: 'Analytics' }} />
+          <Stack.Screen 
+            name="Analytics" 
+            component={AnalyticsScreen} 
+            options={{ 
+              headerShown: false // Hide the header completely to match the Timer screen
+            }} 
+          />
         </Stack.Navigator>
       </NavigationContainer>
     );
