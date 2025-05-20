@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, Button, ScrollView, TouchableOpacity, Animated, Platform } from 'react-native';
 import { LineChart, Grid, XAxis, YAxis } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
-import { Defs, LinearGradient, Stop, Text as SvgText, G, Circle } from 'react-native-svg';
+import { Text as SvgText, G, Circle } from 'react-native-svg';
 import { fetchAnalyticsData } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 
@@ -252,15 +252,6 @@ const AnalyticsScreen = () => {
     }
   }, [selectedRange]); // Dependency only on selectedRange now
 
-  const Gradient = () => (
-    <Defs key={'gradient'}>
-      <LinearGradient id={'gradient'} x1={'0%'} y1={'0%'} x2={'0%'} y2={'100%'}>
-        <Stop offset={'0%'} stopColor={'#4AE54A'} stopOpacity={0.8}/>
-        <Stop offset={'100%'} stopColor={'#4AE54A'} stopOpacity={0.2}/>
-      </LinearGradient>
-    </Defs>
-  );
-
   // We use the decorator pattern provided by `react-native-svg-charts` so we have
   // access to the `x` and `y` helpers that convert an index/value into the exact
   // pixel position within the chart.
@@ -301,10 +292,10 @@ const AnalyticsScreen = () => {
       <G key={"max-value-decorator"}>
         {/* Peak marker */}
         <Circle cx={cx} cy={cy} r={4} fill="#4AE54A" />
-        {/* Label slightly above the marker */}
+        {/* Position label so it's fully visible */}
         <SvgText
           x={cx + dx}
-          y={cy - 10}
+          y={cy - 15}
           fontSize={14}
           fontWeight="bold"
           fill="#4AE54A"
@@ -356,7 +347,8 @@ const AnalyticsScreen = () => {
   
   const xAxisHeight = 30;
   // Add right inset to provide breathing room for max-value label on the far-right point
-  const chartContentInset = { top: 10, bottom: 10, left: 10, right: 20 };
+  // Increase top inset to provide more space for the max value label
+  const chartContentInset = { top: 20, bottom: 10, left: 10, right: 20 };
 
   return (
     <View style={styles.container}>
@@ -417,14 +409,13 @@ const AnalyticsScreen = () => {
                 <LineChart
                   style={{ flex: 1 }}
                   data={chartData}
-                  svg={{ stroke: 'url(#gradient)', strokeWidth: 2.5 }}
+                  svg={{ stroke: '#4AE54A', strokeWidth: 2.5 }}
                   contentInset={chartContentInset}
                   curve={shape.curveLinear}
                   yMin={0}
                   yMax={60}
                 >
                   <Grid svg={{ stroke: '#333333' }} />
-                  <Gradient />
                   {chartData.length > 0 && <MaxValueDecorator />}
                 </LineChart>
                 <XAxis
@@ -624,7 +615,8 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   yAxis: {
-    marginBottom: 30
+    marginBottom: 30,
+    marginTop: 10 // Add margin to align with chart's content inset
   },
   xAxis: {
     marginHorizontal: -10, 
