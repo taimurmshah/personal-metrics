@@ -23,7 +23,7 @@
     "react-native-linear-gradient": "^2.8.3",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.10.0",
-    "react-native-svg": "^7.2.1",
+    "react-native-svg": "^15.12.0",
     "react-native-svg-charts": "^5.4.0"
   },
   "devDependencies": {
@@ -52,7 +52,9 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFiles": ["<rootDir>/jestSetup.js"],
+    "setupFiles": [
+      "<rootDir>/jestSetup.js"
+    ],
     "transformIgnorePatterns": [
       "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-svg|react-native-svg-charts)/)"
     ]

@@ -180,7 +180,26 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** The `fetchAnalyticsData` function in `frontend/MeditationApp/src/services/api.ts` was a placeholder returning mock data.
         *   **Attempt 1:** Identified the need to use `axios` for the API call, retrieve the auth token using `getToken` from `src/utils/storage.ts`, and fetch `API_BASE_URL` from `react-native-config`.
         *   **Solution:** Updated `frontend/MeditationApp/src/services/api.ts` to implement the actual `GET /api/analytics` call. This includes sending the `Authorization` header with the JWT, passing `from` and `to` date parameters, and robust error handling for API responses and network issues, adhering to `error-logging-guidelines.mdc`. The `AnalyticsScreen.tsx` already handles loading/error states and data transformation.
+    *   **Problem:** Backend API returned `404 Not Found` for `/api/analytics`.
+        *   **Attempt 1:** Checked `backend/src/server.ts` and found that `analyticsRouter` was not imported or mounted.
+        *   **Solution:** Updated `backend/src/server.ts` to import `analyticsRouter` from `./routes/analytics` and mount it with `app.use('/api/analytics', verifyAuthToken, analyticsRouter);`. Also fixed a linter/type issue in `backend/src/middleware/auth.ts` by ensuring `verifyAuthToken` has a void return type in error branches.
+    *   **Problem:** Backend API returned `400 Bad Request` with error `startDate.missing`.
+        *   **Attempt 1:** Identified that the frontend was sending query parameters as `from` and `to`, while the backend expected `startDate` and `endDate`.
+        *   **Solution:** Updated `frontend/MeditationApp/src/services/api.ts` to change the query parameter names in the `axios.get` call to `startDate: params.from` and `endDate: params.to`.
+    *   **Problem:** App crashed with "Uncaught Error: Cannot read property 'style' of undefined" in `Svg.js` related to `ViewPropTypes` and `YAxis` undefined, after API call was successful.
+        *   **Attempt 1:** Identified that `react-native-svg` was an old version (`7.2.1`).
+        *   **Solution:** Upgraded `react-native-svg` to the latest version (`npm install react-native-svg@latest`) and ran `cd ios && pod install && cd ..`. This resolved the crash and the Analytics screen now displays data correctly.
 *   [ ] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
+    *   **Problem:** In the 1-year view, the maximum-value label ("54m") was clipped by the right edge of the chart, cutting off the trailing "m".
+        *   **Attempt 1:** Added a dynamic horizontal offset in `MaxValueDecorator` when the peak was at an edge, shifting the text left or right. This alone didn't create enough space and the label was still cropped on some devices.
+        *   **Attempt 2 (Solution):** Introduced additional right-side padding by using a shared `chartContentInset` `{ left: 10, right: 20 }` applied to `LineChart`, `YAxis`, and `XAxis` in `AnalyticsScreen.tsx`. This extra inset ensures the label has breathing room and is fully visible across all ranges.
+    *   **Problem:** The Summary section in `AnalyticsScreen.tsx` displayed "Total Sessions" and "Adherence Rate" which are no longer required.
+        *   **Solution:** Modified `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` to remove "Total Sessions" and "Adherence Rate" from the rendered JSX in the Summary section. Also updated the `AnalyticsSummary` interface to remove `totalSessions` and `adherenceRate` properties.
+    *   **Problem:** The "Average Minutes/Day" in the analytics summary was calculated based on active days only, not the total days in the selected period.
+        *   **Attempt 1:** Modified `backend/src/routes/analytics.ts` to calculate `totalDaysInPeriod` (inclusive of start and end dates). The `averageMinutesPerDay` is now `totalMinutes / totalDaysInPeriod`.
+        *   **Attempt 2:** Removed `totalSessions` and `adherenceRate` from the backend response in `backend/src/routes/analytics.ts` as they are no longer used by the frontend.
+        *   **Attempt 3 (Correction):** Refined the calculation of `totalDaysInPeriod` in `backend/src/routes/analytics.ts` to be `(endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24))`. This correctly reflects the number of days in the interval `[startDate, endDate)` which aligns with how the frontend defines and displays the period (e.g., a 7-day period from '2023-01-01' to '2023-01-07' inclusive is represented by `startDate='2023-01-01'` and `endDate='2023-01-08'`).
+        *   **Solution:** Updated tests in `backend/src/routes/analytics.test.ts` to reflect the corrected calculation for `averageMinutesPerDay` (e.g., expecting 7.5 for a 6-day test period with 45 total minutes).
 
 ## 4. Local Testing Tasks
 

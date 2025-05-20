@@ -40,8 +40,8 @@ export const fetchAnalyticsData = async (params: FetchAnalyticsDataParams): Prom
   try {
     const response = await axios.get<ApiAnalyticsResponse>(`${API_BASE_URL}/api/analytics`, {
       params: {
-        from: params.from,
-        to: params.to,
+        startDate: params.from,
+        endDate: params.to,
       },
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Button, ScrollView } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Button, ScrollView, TouchableOpacity, Animated, Platform } from 'react-native';
 import { LineChart, Grid, XAxis, YAxis } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
-import { Defs, LinearGradient, Stop } from 'react-native-svg';
-import { fetchAnalyticsData } from '../services/api'; // Corrected path
+import { Defs, LinearGradient, Stop, Text as SvgText, G, Circle } from 'react-native-svg';
+import { fetchAnalyticsData } from '../services/api';
 
 // Define interfaces for the data
 interface DailyTotal {
@@ -13,42 +12,110 @@ interface DailyTotal {
 }
 
 interface AnalyticsSummary {
-  totalSessions: number;
   totalMinutes: number;
   averageMinutesPerDay: number;
   currentStreak: number;
-  adherenceRate: number;
   daysWithSessions: number;
 }
 
 interface AnalyticsData {
   summary: AnalyticsSummary;
-  dailyTotals: DailyTotal[]; // Changed to array of objects for chart
+  dailyTotals: DailyTotal[];
+}
+
+// Define time range options
+type TimeRange = '1W' | '1M' | '3M' | '6M' | '1Y';
+
+const TIME_RANGES: TimeRange[] = ['1W', '1M', '3M', '6M', '1Y'];
+
+interface TabLayout {
+  x: number;
+  width: number;
 }
 
 const AnalyticsScreen = () => {
-  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 6))); // Default to last 7 days
-  const [endDate, setEndDate] = useState(new Date());
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [selectedRange, setSelectedRange] = useState<TimeRange>('1W');
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [tabLayouts, setTabLayouts] = useState<Record<TimeRange, TabLayout | null>>({
+    '1W': null,
+    '1M': null,
+    '3M': null,
+    '6M': null,
+    '1Y': null,
+  });
+
+  const indicatorPositionX = useRef(new Animated.Value(0)).current;
+  const indicatorWidth = useRef(new Animated.Value(0)).current;
+
+  // Calculate start and end dates based on the selected range
+  const calculateDateRange = useCallback((range: TimeRange): { startDate: Date; endDate: Date } => {
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    switch (range) {
+      case '1W':
+        startDate.setDate(endDate.getDate() - 7);
+        break;
+      case '1M':
+        startDate.setMonth(endDate.getMonth() - 1);
+        break;
+      case '3M':
+        startDate.setMonth(endDate.getMonth() - 3);
+        break;
+      case '6M':
+        startDate.setMonth(endDate.getMonth() - 6);
+        break;
+      case '1Y':
+        startDate.setFullYear(endDate.getFullYear() - 1);
+        break;
+      default:
+        startDate.setDate(endDate.getDate() - 7); // Default to 1 week
+    }
+    
+    return { startDate, endDate };
+  }, []);
+
   const loadData = useCallback(async () => {
-    setLoading(true);
+    if (!data) { // Only show full screen loader if no data is currently displayed
+      setLoading(true);
+    }
     setError(null);
     try {
+      const { startDate, endDate } = calculateDateRange(selectedRange);
+      
       // Format dates to YYYY-MM-DD string for the API
       const from = startDate.toISOString().split('T')[0];
       const to = endDate.toISOString().split('T')[0];
       
-      const result = await fetchAnalyticsData({ from, to }); // Adjust if API expects different params
+      const result = await fetchAnalyticsData({ from, to });
 
-      // Transform dailyTotals from { 'YYYY-MM-DD': minutes } to { date: 'YYYY-MM-DD', minutes: number }[]
-      const transformedDailyTotals = Object.entries(result.dailyTotals || {}).map(([date, minutes]) => ({
+      // Fill in all days in the range with zeros for missing days
+      const allDates: string[] = [];
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        allDates.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      // Create an object with all dates initialized to 0 minutes
+      const filledDailyTotals: Record<string, number> = allDates.reduce((acc, date) => {
+        acc[date] = 0;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Merge with actual data
+      Object.entries(result.dailyTotals || {}).forEach(([date, seconds]) => {
+        filledDailyTotals[date] = seconds;
+      });
+
+      // Transform daily totals from { 'YYYY-MM-DD': seconds } to { date: 'YYYY-MM-DD', minutes: number }[]
+      // Convert seconds to minutes during the transformation
+      const transformedDailyTotals = Object.entries(filledDailyTotals).map(([date, seconds]) => ({
         date,
-        minutes: Number(minutes), // Ensure minutes is a number
+        minutes: Math.round(Number(seconds) / 60), // Convert seconds to minutes
       })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date for the chart
 
       setData({ ...result, dailyTotals: transformedDailyTotals });
@@ -58,38 +125,185 @@ const AnalyticsScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate]);
+  }, [selectedRange, calculateDateRange, data]);
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [selectedRange]); // Keep loadData dependency if its definition changes based on selectedRange, otherwise selectedRange is enough
 
-  const onStartDateChange = (event: any, selectedDate?: Date) => {
-    setShowStartDatePicker(false);
-    if (selectedDate) {
-      setStartDate(selectedDate);
-    }
-  };
+  const handleRangeChange = (range: TimeRange) => {
+    setSelectedRange(range); // Update the selected range first
+    // loadData(); // This will be implicitly called by useEffect reacting to selectedRange change if loadData depends on it
+                  // Or, if loadData is stable and doesn't depend on selectedRange in its definition, call it explicitly.
+                  // For now, assuming useEffect will handle it due to selectedRange in loadData's deps array.
 
-  const onEndDateChange = (event: any, selectedDate?: Date) => {
-    setShowEndDatePicker(false);
-    if (selectedDate) {
-      setEndDate(selectedDate);
+    // Animate the indicator immediately
+    const layout = tabLayouts[range];
+    if (layout) {
+      Animated.spring(indicatorPositionX, {
+        toValue: layout.x,
+        useNativeDriver: false, // 'left' and 'width' are not supported by native driver
+      }).start();
+      Animated.spring(indicatorWidth, {
+        toValue: layout.width,
+        useNativeDriver: false,
+      }).start();
     }
   };
   
+  const handleTabLayout = (event: any, range: TimeRange) => {
+    const { x, width } = event.nativeEvent.layout;
+    const newLayouts = {...tabLayouts, [range]: { x, width }};
+    setTabLayouts(newLayouts);
+
+    const isAnyLayoutDefined = Object.values(newLayouts).some(layout => layout !== null);
+
+    // Set initial position for the first selected tab
+    if (range === selectedRange && newLayouts[range]) {
+       // Check if all layouts are available to prevent race condition
+      const allLayoutsAvailable = TIME_RANGES.every(r => newLayouts[r] !== null);
+      if (allLayoutsAvailable) {
+        const initialLayout = newLayouts[selectedRange];
+        if (initialLayout) {
+            indicatorPositionX.setValue(initialLayout.x);
+            indicatorWidth.setValue(initialLayout.width);
+        }
+      }
+    } else if (range === selectedRange && !isAnyLayoutDefined && newLayouts[selectedRange]) {
+        // Fallback for initial load if selectedRange layout comes first and no indicator width is set yet
+        const initialLayout = newLayouts[selectedRange];
+        if (initialLayout) {
+            indicatorPositionX.setValue(initialLayout.x);
+            indicatorWidth.setValue(initialLayout.width);
+        }
+    }
+  };
+
   const chartData = data?.dailyTotals.map(item => item.minutes) || [];
   const chartDates = data?.dailyTotals.map(item => new Date(item.date)) || [];
+
+  // Determine which dates should show labels based on selected range
+  const shouldShowLabel = useCallback((date: Date, index: number): boolean => {
+    switch (selectedRange) {
+      case '1W':
+        // Show every other day for 1 week view
+        return index % 2 === 0;
+      case '1M':
+        // Show only Mondays for 1 month view
+        return date.getDay() === 1; // Monday is 1
+      case '3M':
+        // Show only 1st of each month for 3 month view
+        return date.getDate() === 1;
+      case '6M':
+        // Show only 1st of month for 6 month view
+        return date.getDate() === 1;
+      case '1Y':
+        // Show only 1st day of each month for 1 year view
+        return date.getDate() === 1;
+      default:
+        return false;
+    }
+  }, [selectedRange]);
+
+  const filteredXAxisChartDates = useMemo(() => {
+    if (!chartDates) return [];
+    // The `index` here is the original index from the full `chartDates` array.
+    return chartDates.filter((date, index) => shouldShowLabel(date, index));
+  }, [chartDates, shouldShowLabel]);
+
+  // Format the x-axis label based on selected range
+  const formatXAxisLabel = useCallback((
+    date: Date, // Changed: this is now the actual Date object from filteredXAxisChartDates
+    index: number // This is the index within filteredXAxisChartDates
+  ): string => {
+    // if (!date) { // Guard against undefined date object
+    //   return '';
+    // }
+    // Add a more robust check for valid Date objects
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return '';
+    }
+
+    // The `shouldShowLabel` check is no longer needed here as the list is pre-filtered.
+
+    switch (selectedRange) {
+      case '1W':
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      case '1M':
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      case '3M':
+      case '6M':
+      case '1Y':
+        // Just show month name for longer time periods
+        return date.toLocaleString('default', { month: 'short' });
+      default:
+        return '';
+    }
+  }, [selectedRange]); // Dependency only on selectedRange now
 
   const Gradient = () => (
     <Defs key={'gradient'}>
       <LinearGradient id={'gradient'} x1={'0%'} y1={'0%'} x2={'0%'} y2={'100%'}>
-        <Stop offset={'0%'} stopColor={'rgb(134, 65, 244)'} stopOpacity={0.8}/>
-        <Stop offset={'100%'} stopColor={'rgb(66, 194, 244)'} stopOpacity={0.2}/>
+        <Stop offset={'0%'} stopColor={'#4AE54A'} stopOpacity={0.8}/>
+        <Stop offset={'100%'} stopColor={'#4AE54A'} stopOpacity={0.2}/>
       </LinearGradient>
     </Defs>
   );
 
+  // We use the decorator pattern provided by `react-native-svg-charts` so we have
+  // access to the `x` and `y` helpers that convert an index/value into the exact
+  // pixel position within the chart.
+  // Ref: https://github.com/JesperLekland/react-native-svg-charts#decorators- 📈
+  interface DecoratorProps {
+    x?: (value: number) => number;
+    y?: (value: number) => number;
+    data?: number[];
+  }
+
+  const MaxValueDecorator = ({ x, y, data }: DecoratorProps) => {
+    if (!data || !x || !y || data.length === 0) return null;
+
+    const maxValue = Math.max(...data);
+    const maxIndex = data.indexOf(maxValue);
+
+    // Guard against all-zero data or not found
+    if (maxValue <= 0 || maxIndex === -1) return null;
+
+    const cx = x(maxIndex);
+    const cy = y(maxValue);
+
+    // Shift label horizontally when at chart edges so text isn't clipped
+    let dx = 0;
+    let textAnchor: 'start' | 'middle' | 'end' = 'middle';
+
+    if (maxIndex === data.length - 1) {
+      // Right edge → draw text to the left of the point
+      dx = -6;
+      textAnchor = 'end';
+    } else if (maxIndex === 0) {
+      // Left edge → draw text to the right of the point
+      dx = 6;
+      textAnchor = 'start';
+    }
+
+    return (
+      <G key={"max-value-decorator"}>
+        {/* Peak marker */}
+        <Circle cx={cx} cy={cy} r={4} fill="#4AE54A" />
+        {/* Label slightly above the marker */}
+        <SvgText
+          x={cx + dx}
+          y={cy - 10}
+          fontSize={14}
+          fontWeight="bold"
+          fill="#4AE54A"
+          textAnchor={textAnchor}
+        >
+          {`${maxValue}m`}
+        </SvgText>
+      </G>
+    );
+  };
 
   if (loading) {
     return (
@@ -113,78 +327,83 @@ const AnalyticsScreen = () => {
     return (
       <View style={styles.centered}>
         <Text>No analytics data available for the selected period.</Text>
-        <Button title="Try different dates" onPress={() => setShowStartDatePicker(true)} />
+        <Button title="Try different range" onPress={() => handleRangeChange('1M')} />
       </View>
     );
   }
   
   const xAxisHeight = 30;
-  const verticalContentInset = { top: 10, bottom: 10 };
-
+  // Add right inset to provide breathing room for max-value label on the far-right point
+  const chartContentInset = { top: 10, bottom: 10, left: 10, right: 20 };
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Meditation Analytics</Text>
 
-      <View style={styles.datePickerContainer}>
-        <View style={styles.datePicker}>
-          <Button onPress={() => setShowStartDatePicker(true)} title="Start Date" testID="start-date-picker-button" />
-          <Text style={styles.dateText}>{startDate.toDateString()}</Text>
-          {showStartDatePicker && (
-            <DateTimePicker
-              testID="start-date-picker"
-              value={startDate}
-              mode="date"
-              display="default"
-              onChange={onStartDateChange}
-            />
-          )}
-        </View>
-        <View style={styles.datePicker}>
-          <Button onPress={() => setShowEndDatePicker(true)} title="End Date" testID="end-date-picker-button" />
-          <Text style={styles.dateText}>{endDate.toDateString()}</Text>
-          {showEndDatePicker && (
-            <DateTimePicker
-              testID="end-date-picker"
-              value={endDate}
-              mode="date"
-              display="default"
-              onChange={onEndDateChange}
-            />
-          )}
-        </View>
+      {/* Time range selector tabs */}
+      <View style={styles.timeRangeContainer}>
+        <Animated.View
+          style={[
+            styles.selectedTimeRangeTabIndicator,
+            {
+              left: indicatorPositionX,
+              width: indicatorWidth,
+            },
+          ]}
+        />
+        {TIME_RANGES.map((range) => (
+          <TouchableOpacity 
+            key={range}
+            style={styles.timeRangeTab}
+            onPress={() => handleRangeChange(range)}
+            testID={`range-${range}`}
+            onLayout={(event) => handleTabLayout(event, range)}
+          >
+            <Text 
+              style={[
+                styles.timeRangeText,
+                selectedRange === range && styles.selectedTimeRangeText
+              ]}
+            >
+              {range}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {chartData.length > 0 ? (
-        <View style={{ height: 250, flexDirection: 'row', paddingHorizontal: 10, marginTop: 20 }}>
+        <View style={styles.chartContainer}>
            <YAxis
               data={chartData}
-              style={{ marginBottom: xAxisHeight }}
-              contentInset={verticalContentInset}
-              svg={{ fontSize: 10, fill: 'grey' }}
-              numberOfTicks={5}
-              formatLabel={(value: number, index: number) => `${value}m`}
+              style={styles.yAxis}
+              contentInset={chartContentInset}
+              svg={{ fontSize: 10, fill: '#999999' }}
+              numberOfTicks={3}
+              min={0}
+              max={60}
+              formatLabel={(value) => `${value}m`}
             />
-            <View style={{ flex: 1, marginLeft: 10 }}>
+            <View style={styles.chartWrapper}>
               <LineChart
                 style={{ flex: 1 }}
                 data={chartData}
-                svg={{ stroke: 'url(#gradient)', strokeWidth: 2 }}
-                contentInset={verticalContentInset}
-                curve={shape.curveNatural}
+                svg={{ stroke: 'url(#gradient)', strokeWidth: 2.5 }}
+                contentInset={chartContentInset}
+                curve={shape.curveLinear}
+                yMin={0}
+                yMax={60}
               >
-                <Grid />
+                <Grid svg={{ stroke: '#333333' }} />
                 <Gradient />
+                {chartData.length > 0 && <MaxValueDecorator />}
               </LineChart>
               <XAxis
-                style={{ marginHorizontal: -10, height: xAxisHeight }}
-                data={chartDates}
-                formatLabel={(value: number, index: number) => {
-                  const date = chartDates[index];
-                  return date ? `${date.getMonth() + 1}/${date.getDate()}` : '';
-                }}
-                contentInset={{ left: 10, right: 10 }}
-                svg={{ fontSize: 10, fill: 'grey' }}
+                key={selectedRange}
+                style={styles.xAxis}
+                data={filteredXAxisChartDates}
+                formatLabel={formatXAxisLabel}
+                contentInset={{ left: chartContentInset.left, right: chartContentInset.right }}
+                svg={{ fontSize: 10, fill: '#999999' }}
               />
             </View>
         </View>
@@ -194,12 +413,26 @@ const AnalyticsScreen = () => {
 
       <View style={styles.summaryContainer}>
         <Text style={styles.summaryTitle}>Summary</Text>
-        <Text style={styles.summaryText}>Total Sessions: {data.summary.totalSessions}</Text>
-        <Text style={styles.summaryText}>Total Minutes: {data.summary.totalMinutes}</Text>
-        <Text style={styles.summaryText}>Avg. Minutes/Day: {data.summary.averageMinutesPerDay.toFixed(1)}</Text>
-        <Text style={styles.summaryText}>Current Streak: {data.summary.currentStreak} days</Text>
-        <Text style={styles.summaryText}>Adherence Rate: {(data.summary.adherenceRate * 100).toFixed(1)}%</Text>
-        <Text style={styles.summaryText}>Active Days: {data.summary.daysWithSessions}</Text>
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Total Minutes</Text>
+            <Text style={styles.summaryValue}>{data.summary.totalMinutes}</Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Avg. Minutes/Day</Text>
+            <Text style={styles.summaryValue}>{data.summary.averageMinutesPerDay.toFixed(1)}</Text>
+          </View>
+        </View>
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Current Streak</Text>
+            <Text style={styles.summaryValue}>{data.summary.currentStreak} days</Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Active Days</Text>
+            <Text style={styles.summaryValue}>{data.summary.daysWithSessions}</Text>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -208,67 +441,123 @@ const AnalyticsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#f0f0f0',
+    padding: 16,
+    backgroundColor: '#000000',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#000000',
   },
   centeredText: {
     textAlign: 'center',
     marginVertical: 20,
     fontSize: 16,
-    color: 'grey',
+    color: '#999999',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-    color: '#333',
-  },
-  datePickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  datePicker: {
-    alignItems: 'center',
-  },
-  dateText: {
-    marginTop: 5,
-    fontSize: 12,
-    color: '#555',
+    color: '#FFFFFF',
   },
   errorText: {
-    color: 'red',
+    color: '#FF6B6B',
     marginBottom: 10,
     textAlign: 'center',
   },
   summaryContainer: {
     marginTop: 30,
     padding: 15,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    marginBottom: 20,
   },
   summaryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#444',
+    color: '#FFFFFF',
   },
-  summaryText: {
-    fontSize: 16,
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  summaryItem: {
+    flex: 1,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#999999',
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  timeRangeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
     marginBottom: 5,
-    color: '#666',
+    paddingHorizontal: 10,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 8,
+    position: 'relative',
+    height: 40,
+  },
+  timeRangeTab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  selectedTimeRangeTabIndicator: {
+    position: 'absolute',
+    height: '80%',
+    top: '10%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  timeRangeText: {
+    fontSize: 14,
+    color: '#999999',
+    fontWeight: '500',
+  },
+  selectedTimeRangeText: {
+    color: '#000000',
+    fontWeight: 'bold',
+  },
+  chartContainer: {
+    height: 250,
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    marginTop: 20,
+  },
+  chartWrapper: {
+    flex: 1, 
+    marginLeft: 10
+  },
+  yAxis: {
+    marginBottom: 30
+  },
+  xAxis: {
+    marginHorizontal: -10, 
+    height: 30
   },
 });
 

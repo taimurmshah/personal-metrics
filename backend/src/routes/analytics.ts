@@ -62,10 +62,14 @@ const analyticsHandler: RequestHandler<ParamsDictionary, any, any, AnalyticsQuer
     return;
   }
 
+  // Calculate total number of days in the period.
+  // This represents the number of 24-hour intervals between the start of startDate and the start of endDate.
+  // If frontend sends startDate='2023-01-01' and endDate='2023-01-08', this correctly results in 7 days (Jan 1 to Jan 7).
+  const totalDaysInPeriod = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24);
+
   // Add maximum date range validation (e.g., 1 year)
   const MAX_DATE_RANGE_DAYS = 365;
-  const daysDifference = Math.ceil((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24));
-  if (daysDifference > MAX_DATE_RANGE_DAYS) {
+  if (totalDaysInPeriod > MAX_DATE_RANGE_DAYS) {
     res.status(400).json({ 
       message: 'dateRange.tooLarge', 
       error: `Date range cannot exceed ${MAX_DATE_RANGE_DAYS} days.` 
@@ -109,24 +113,20 @@ const analyticsHandler: RequestHandler<ParamsDictionary, any, any, AnalyticsQuer
     // Calculate analytics metrics
     const totalSeconds = Object.values(dailyTotals).reduce((sum, seconds) => sum + seconds, 0);
     const daysWithSessions = Object.keys(dailyTotals).length;
-    const averageMinutes = daysWithSessions ? Math.round((totalSeconds / daysWithSessions / 60) * 10) / 10 : 0; // Round to 1 decimal
+    const averageMinutesPerDay = totalDaysInPeriod ? Math.round((totalSeconds / totalDaysInPeriod / 60) * 10) / 10 : 0; // Round to 1 decimal
     
     // Calculate streak and additional metrics
     const sortedDays = Object.keys(dailyTotals).sort();
     const currentStreak = calculateStreak(sortedDays);
-    const totalSessions = data?.length || 0;
     const totalMinutes = Math.round(totalSeconds / 60);
-    const adherenceRate = daysDifference ? Math.round((daysWithSessions / daysDifference) * 100) : 0; // % of days with sessions
 
     res.status(200).json({
       startDate,
       endDate,
       summary: {
-        totalSessions,
         totalMinutes,
-        averageMinutesPerDay: averageMinutes,
+        averageMinutesPerDay,
         daysWithSessions,
-        adherenceRate,
         currentStreak
       },
       dailyTotals

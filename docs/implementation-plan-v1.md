@@ -47,7 +47,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Implement navigation from Timer screen to Analytics screen - Ref: FR19
 *   [x] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
 *   [x] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
-*   [ ] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
+*   [x] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
 *   [ ] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
 
 ## 4. Local Testing Tasks
