@@ -28,6 +28,31 @@ router.post('/google', async (req: Request, res: Response) => {
             return; // Use plain return to exit early
         }
 
+        // --- Email Allow List Check ---
+        const userEmail = authResult.user.email;
+        const allowedEmailsEnv = process.env.ALLOWED_EMAILS;
+
+        if (!userEmail) { // Should not happen if Supabase user exists, but good to check
+            console.warn('User authenticated but email is missing in authResult.user');
+            res.status(403).json({ error: 'Access denied. User email not available.' });
+            return;
+        }
+
+        if (!allowedEmailsEnv) {
+            console.warn('ALLOWED_EMAILS environment variable is not set. Denying all sign-ins as a security precaution.');
+            res.status(403).json({ error: 'Access denied. Application not configured for sign-ups at this time.' });
+            return;
+        }
+
+        const allowedEmails = allowedEmailsEnv.split(',').map(email => email.trim().toLowerCase());
+
+        if (!allowedEmails.includes(userEmail.toLowerCase())) {
+            console.warn(`Access denied for email: ${userEmail}. Not in allow list.`);
+            res.status(403).json({ error: 'Access denied. This email address is not authorized to use this application.' });
+            return;
+        }
+        // --- End Email Allow List Check ---
+
         // --- JWT Generation --- 
         // The user is authenticated via Supabase. 
         // Now, generate our own API token (JWT) for subsequent API requests.

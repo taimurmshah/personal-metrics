@@ -19,6 +19,8 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Configure `Vercel` project & environment variables.
 *   [x] Write unit tests for `GET /api/analytics` endpoint (range validation, user auth, data aggregation) (TDD) - Ref: FR23, FR24, FR25
 *   [x] Implement `GET /api/analytics` endpoint to return aggregated meditation stats - Ref: FR23, FR24, FR25
+*   [ ] Write unit tests for email allow list functionality (TDD) - Ref: User Request
+*   [ ] Implement email allow list for Google Sign-In (backend) - Ref: User Request
 
 ## 3. Frontend Tasks (React Native for iOS)
 *   [x] Set up React Native Project (targeting iOS initially).

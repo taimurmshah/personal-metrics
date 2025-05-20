@@ -132,6 +132,10 @@ Corresponds to implementation-plan-v1.md
         *   **Solution:** Added the Web Client ID was already present; root cause shifted to frontend accessing `userInfo.user` after SDK update, causing TypeError. Patched `AuthScreen.tsx` to safely derive `displayName` from `userInfo.data.user.*`. Sign-in flow now succeeds end-to-end and app navigates to Timer screen.
 *   [x] Test session recording flow (Start -> Pause -> Resume -> Stop -> Verify data in `Supabase`).
     *   **Solution:** End-to-end test complete. After running a full timer cycle and pressing Stop, the app received a 201 response and the new row is visible in `MeditationSessions` with correct `user_id`, `session_start_time`, `session_end_time`, and `duration_seconds`. Data persistence confirmed.
+*   [ ] Implement email allow list for Google Sign-In (backend) - Ref: User Request
+    *   **Problem:** User wants to restrict sign-ups to a specific list of emails.
+    *   **Attempt 1:** Modified `backend/src/routes/auth.ts` to check the authenticated user's email against a comma-separated list from the `ALLOWED_EMAILS` environment variable. If the email is not on the list, or if the variable is not set, a 403 Forbidden error is returned.
+    *   **Solution:** The backend now checks `authResult.user.email` against `process.env.ALLOWED_EMAILS`.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.
@@ -199,71 +203,4 @@ Corresponds to implementation-plan-v1.md
         *   **Attempt 1:** Modified `backend/src/routes/analytics.ts` to calculate `totalDaysInPeriod` (inclusive of start and end dates). The `averageMinutesPerDay` is now `totalMinutes / totalDaysInPeriod`.
         *   **Attempt 2:** Removed `totalSessions` and `adherenceRate` from the backend response in `backend/src/routes/analytics.ts` as they are no longer used by the frontend.
         *   **Attempt 3 (Correction):** Refined the calculation of `totalDaysInPeriod` in `backend/src/routes/analytics.ts` to be `(endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24))`. This correctly reflects the number of days in the interval `[startDate, endDate)` which aligns with how the frontend defines and displays the period (e.g., a 7-day period from '2023-01-01' to '2023-01-07' inclusive is represented by `startDate='2023-01-01'` and `endDate='2023-01-08'`).
-        *   **Solution:** Updated tests in `backend/src/routes/analytics.test.ts` to reflect the corrected calculation for `averageMinutesPerDay` (e.g., expecting 7.5 for a 6-day test period with 45 total minutes).
-    *   **Problem:** The "Current Streak" in `AnalyticsScreen.tsx` displayed as "1 days" instead of "1 day".
-        *   **Solution:** Modified `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` to conditionally render "day" if `data.summary.currentStreak` is 1, and "days" otherwise.
-    *   **Problem:** The "Summary" title in `AnalyticsScreen.tsx` was static.
-        *   **Solution:** Added a `getSummaryTitle` helper function in `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` that returns a dynamic title (e.g., "One Week Summary", "One Month Summary") based on the `selectedRange`. The `Text` component for the summary title now calls this function.
-    *   **Problem:** Add "Longest Streak" to Analytics screen summary per user request.
-        *   **Attempt 1 (Backend):** Modified `backend/src/routes/analytics.ts` to add a new helper function `calculateLongestStreak` that iterates through sorted days with sessions to find the longest consecutive sequence. Updated the main handler to call this function and include `longestStreak` in the `summary` object of the API response.
-        *   **Attempt 2 (Backend Tests):** Updated `backend/src/routes/analytics.test.ts` to include assertions for the new `longestStreak` field in both successful data retrieval and empty/zeroed data scenarios.
-        *   **Attempt 3 (Frontend):** Modified `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` by adding `longestStreak: number;` to the `AnalyticsSummary` interface. Added new `View` and `Text` components to display the "Longest Streak" value, including logic for singular/plural "day"/"days".
-        *   **Solution:** Backend API now calculates and returns `longestStreak`. Frontend `AnalyticsScreen.tsx` is updated to display this new metric. A linter error regarding type incompatibility for `longestStreak` in `fetchAnalyticsData` return type is noted and expected to resolve once `api.ts` types are updated or data flows through.
-    *   **Problem:** The Weekly Summary panel on the Timer screen did not display a bar chart and had placeholder data.
-        *   **Attempt 1:** Reviewed `TimerScreen.tsx` and found that data fetching logic for the weekly summary was commented out. Identified that `date-fns` was required and already installed.
-        *   **Solution:** Uncommented the data fetching logic in `TimerScreen.tsx's `useFocusEffect` hook. This logic uses `fetchAnalyticsData` to get data for the last 7 days and formats it for the `WeeklySummary` component. Corrected an import path for `fetchAnalyticsData` from `../../../../src/services/api` to `../services/api`.
-        *   **Problem:** The `WeeklySummary.tsx` component styling did not match the user-provided mockup (light theme vs. dark theme, different title).
-            *   **Attempt 1:** Reviewed existing styles and `BarChart` props in `WeeklySummary.tsx`.
-            *   **Solution:** Updated styles in `WeeklySummary.tsx` to match the mockup:
-                *   Container: Dark semi-transparent background (`rgba(25, 25, 75, 0.6)`), rounded corners, shadow.
-                *   Title: Changed to "Last 7 sessions", white text.
-                *   Text: Average minutes and no-data text styled with light colors.
-                *   Bar Chart: Bar fill color changed to `rgba(100, 150, 255, 0.9)`. Ensured chart data always has 7 points by padding with 0s or truncating.
-        *   **Problem:** The "Average Minutes" calculation method needed confirmation.
-            *   **Attempt 1 (Review):** The current calculation in `WeeklySummary.tsx` averages the total minutes over a fixed 7-day period.
-            *   **Solution:** User confirmed the current approach is acceptable. Calculation remains `Math.round(totalMinutes / 7)`.
-    *   **Problem:** The bars and day labels in the `WeeklySummary` chart were misaligned, with labels appearing to the right of the bars.
-        *   **Attempt 1:** Analyzed `BarChart` and `XAxis` `contentInset` and `spacingOuter` properties.
-        *   **Attempt 2:** Tried shifting labels by adjusting the `XAxis` `contentInset` with a left-right delta, but alignment issues remained.
-        *   **Attempt 3:** Made multiple adjustments to `spacingInner`, `spacingOuter`, and alignment properties, with limited success.
-        *   **Solution:** Completely rewrote the data preparation logic to ensure perfect alignment:
-            * Created a consistent processing pipeline for both chart data and labels
-            * Sorted sessions by date to ensure chronological order
-            * Generated chart data and labels from the same exact array
-            * Used identical `spacingInner` and `spacingOuter` values for both chart and axis
-            * Set `spacingOuter` to 0 to ensure edge bars align with edge labels
-        *   **Attempt 4:** After continued alignment issues, abandoned `react-native-svg-charts` in favor of a custom flexbox-based chart implementation with direct control over positioning. This solved the alignment issue by using the same layout system for both bars and labels.
-        *   **Problem:** Chart showed small lines for days with zero meditation minutes.
-            *   **Solution:** Updated the bar rendering to conditionally render bars only for days with values greater than zero, while still showing all day labels.
-
-## 4. Local Testing Tasks
-
-*   [ ] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
-    *   **Problem:** Backend returned `401` with error "Passed nonce and nonce in id_token should either both exist or not." when the iOS app attempted Google Sign-In (Supabase `signInWithIdToken`).
-        *   **Attempt 1:** Investigated backend logs and confirmed `supabase.auth.signInWithIdToken` was called **without** a `nonce` parameter, while the received ID token **did** contain a `nonce` claim.
-        *   **Solution:** Updated `backend/src/services/auth.ts` to decode the Google ID token using `jsonwebtoken.decode`, extract the `nonce`, and conditionally pass it to `supabase.auth.signInWithIdToken`. After redeploying, authentication succeeds and the backend returns a JWT to the mobile app.
-    *   **Problem:** Frontend throwing error "Google Sign-In succeeded but idToken is missing" despite token being present in response.
-        *   **Attempt 1:** Fixed token access path from `userInfo.idToken` to `userInfo.data.idToken` to match actual response structure from `GoogleSignin.signIn()`.
-        *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to correctly access the token and added better error logging.
-    *   **Problem:** Backend returning 401 "Bad ID token" error after fixing token access path.
-        *   **Attempt 1:** Inspected request payload and found we needed to send the token in the correct structure.
-        *   **Solution:** Updated `frontend/MeditationApp/src/screens/AuthScreen.tsx` to send the token in the expected format `{ googleToken: userInfo.data.idToken }` and included additional user info for future use.
-    *   **Problem:** Backend returning 401 "Bad ID token" again during Google Sign-In despite previous fixes.
-        *   **Attempt 1:** Verified the mobile app is sending `{ googleToken: <ID token> }` and confirmed the backend route receives this payload.
-        *   **Attempt 2:** Inspected decoded ID token claims in dev console; noted `aud` claim equals the **Web** client ID while Supabase Google provider is configured only with the **iOS** client ID, causing Supabase to reject the token.
-        *   **Attempt 3 (Planned):** Add the Web client ID (`422501331694-dg27b49qg1in08f46up9eglmbvr1gm4e.apps.googleusercontent.com`) to the *Additional Client IDs* field in Supabase Auth > Google Provider settings and redeploy backend.
-        *   **Solution:** Added the Web Client ID was already present; root cause shifted to frontend accessing `userInfo.user` after SDK update, causing TypeError. Patched `AuthScreen.tsx` to safely derive `displayName` from `userInfo.data.user.*`. Sign-in flow now succeeds end-to-end and app navigates to Timer screen.
-*   [ ] Test handling of network errors during session save.
-*   [ ] Verify RLS policies prevent cross-user data access.
-*   [ ] Perform UI testing on target iOS versions/devices.
-*   [ ] Monitor `Vercel` logs and `Supabase` usage.
-*   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
-
-## 5. Deployment Tasks
-
-*   [ ] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2
-*   [ ] Deploy backend API to `Vercel`.
-    *   **Problem:** Vercel deployment results in `HTTP 404` with `x-vercel-error: NOT_FOUND` for all paths, including API endpoints, despite successful build logs.
-        *   **Attempt 1:** Initial `curl` tests to base URL and `/api/auth/google` both yielded Vercel platform 404s.
-        *   **Attempt 2:** Investigated Vercel project settings. "Root Directory" was set to `backend`. "Framework Preset" was "Other".
-        *   **Attempt 3:** Created `vercel.json` at the project root to explicitly define build (using `backend/package.json`
+        *   **Solution:** Updated tests in `backend/src/routes/analytics.test.ts` to reflect the corrected calculation for `averageMinutesPerDay`

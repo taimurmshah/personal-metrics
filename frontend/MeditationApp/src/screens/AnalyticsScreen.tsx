@@ -548,6 +548,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#FFFFFF',
+    textAlign: 'center',
   },
   summaryRow: {
     flexDirection: 'row',
