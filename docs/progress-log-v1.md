@@ -204,6 +204,32 @@ Corresponds to implementation-plan-v1.md
         *   **Solution:** Modified `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` to conditionally render "day" if `data.summary.currentStreak` is 1, and "days" otherwise.
     *   **Problem:** The "Summary" title in `AnalyticsScreen.tsx` was static.
         *   **Solution:** Added a `getSummaryTitle` helper function in `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` that returns a dynamic title (e.g., "One Week Summary", "One Month Summary") based on the `selectedRange`. The `Text` component for the summary title now calls this function.
+    *   **Problem:** The Weekly Summary panel on the Timer screen did not display a bar chart and had placeholder data.
+        *   **Attempt 1:** Reviewed `TimerScreen.tsx` and found that data fetching logic for the weekly summary was commented out. Identified that `date-fns` was required and already installed.
+        *   **Solution:** Uncommented the data fetching logic in `TimerScreen.tsx's `useFocusEffect` hook. This logic uses `fetchAnalyticsData` to get data for the last 7 days and formats it for the `WeeklySummary` component. Corrected an import path for `fetchAnalyticsData` from `../../../../src/services/api` to `../services/api`.
+        *   **Problem:** The `WeeklySummary.tsx` component styling did not match the user-provided mockup (light theme vs. dark theme, different title).
+            *   **Attempt 1:** Reviewed existing styles and `BarChart` props in `WeeklySummary.tsx`.
+            *   **Solution:** Updated styles in `WeeklySummary.tsx` to match the mockup:
+                *   Container: Dark semi-transparent background (`rgba(25, 25, 75, 0.6)`), rounded corners, shadow.
+                *   Title: Changed to "Last 7 sessions", white text.
+                *   Text: Average minutes and no-data text styled with light colors.
+                *   Bar Chart: Bar fill color changed to `rgba(100, 150, 255, 0.9)`. Ensured chart data always has 7 points by padding with 0s or truncating.
+        *   **Problem:** The "Average Minutes" calculation method needed confirmation.
+            *   **Attempt 1 (Review):** The current calculation in `WeeklySummary.tsx` averages the total minutes over a fixed 7-day period.
+            *   **Solution:** User confirmed the current approach is acceptable. Calculation remains `Math.round(totalMinutes / 7)`.
+    *   **Problem:** The bars and day labels in the `WeeklySummary` chart were misaligned, with labels appearing to the right of the bars.
+        *   **Attempt 1:** Analyzed `BarChart` and `XAxis` `contentInset` and `spacingOuter` properties.
+        *   **Attempt 2:** Tried shifting labels by adjusting the `XAxis` `contentInset` with a left-right delta, but alignment issues remained.
+        *   **Attempt 3:** Made multiple adjustments to `spacingInner`, `spacingOuter`, and alignment properties, with limited success.
+        *   **Solution:** Completely rewrote the data preparation logic to ensure perfect alignment:
+            * Created a consistent processing pipeline for both chart data and labels
+            * Sorted sessions by date to ensure chronological order
+            * Generated chart data and labels from the same exact array
+            * Used identical `spacingInner` and `spacingOuter` values for both chart and axis
+            * Set `spacingOuter` to 0 to ensure edge bars align with edge labels
+        *   **Attempt 4:** After continued alignment issues, abandoned `react-native-svg-charts` in favor of a custom flexbox-based chart implementation with direct control over positioning. This solved the alignment issue by using the same layout system for both bars and labels.
+        *   **Problem:** Chart showed small lines for days with zero meditation minutes.
+            *   **Solution:** Updated the bar rendering to conditionally render bars only for days with values greater than zero, while still showing all day labels.
 
 ## 4. Local Testing Tasks
 
