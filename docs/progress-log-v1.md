@@ -141,71 +141,19 @@ Corresponds to implementation-plan-v1.md
     *   **Attempt 1:** Created `backend/tests/routes/auth.test.ts` using `supertest` and `vitest`.
     *   **Attempt 2:** Mocked `handleGoogleSignIn` service and `jsonwebtoken` to control inputs and outputs for the route. Added tests for allowed emails, non-allowed emails, missing `ALLOWED_EMAILS` env var, missing user email in auth result, case insensitivity, and multiple emails in the allow list.
     *   **Solution:** A comprehensive test suite for the email allow list in `backend/tests/routes/auth.test.ts` is now in place.
-*   [ ] Test handling of network errors during session save.
-*   [ ] Verify RLS policies prevent cross-user data access.
-*   [ ] Perform UI testing on target iOS versions/devices.
+*   [x] Test handling of network errors during session save.
+    *   **Problem:** Ensure the app gracefully handles network failures when trying to save a session.
+    *   **Solution:** User confirmed this was tested earlier in the development process. The app is expected to show an error message and reset the timer UI without crashing, and the session should not be saved.
+*   [n/a] Verify RLS policies prevent cross-user data access.
+    *   **Problem:** Ensure one user cannot access another user's data.
+    *   **Solution:** Skipped by user request, as the current application is single-user (n=1).
+*   [n/a] Perform UI testing on target iOS versions/devices.
+    *   **Problem:** Ensure UI consistency and catch rendering bugs across different iOS versions and iPhone models.
+    *   **Solution:** Skipped by user request. The primary user will be using a modern iPhone (e.g., iPhone 15 Pro Max), and broader device testing is not a priority for the MVP with n=1 user.
+*   [x] Test Weekly Summary panel data accuracy against backend for last 7 days.
+    *   **Problem:** Ensure the Weekly Summary panel on the Timer screen accurately reflects the last 7 days of meditation data from the backend.
+    *   **Solution:** User created test data in Supabase, verified API response for the last 7 days, and confirmed frontend Weekly Summary panel (bar chart and average) correctly displayed this data.
+*   [x] Test Analytics screen range selector and chart data accuracy.
+    *   **Problem:** Ensure the Analytics screen accurately displays data for all selected time ranges and that chart aggregations are correct.
+    *   **Solution:** User created diverse test data in Supabase, verified API responses for various ranges (week, month, year, etc.), and confirmed the Analytics screen charts and summary statistics correctly reflected this data for each selected range.
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
-*   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
-*   [x] Implement utility function to format seconds to HH:MM:SS string - Ref: FR7 (updated)
-    *   **Problem:** The timer display in `src/components/Timer.tsx` used a local `formatTime` function that showed `MM:SS` for durations less than an hour, but FR7 requires `HH:MM:SS` always.
-        *   **Attempt 1:** Identified that `src/utils/timeFormatter.ts` contains `formatSecondsToHHMMSS` which correctly formats to `HH:MM:SS`.
-        *   **Solution:** Modified `src/components/Timer.tsx` to remove its local `formatTime` function and instead import and use `formatSecondsToHHMMSS` (aliased as `formatTime`) from `../frontend/MeditationApp/src/utils/timeFormatter.ts`. This ensures the timer display consistently adheres to the `HH:MM:SS` format as required.
-*   [x] Update Timer UI component to use HH:MM:SS formatting function for the running timer display - Ref: FR7 (updated)
-    *   **Problem:** The timer display in `src/components/Timer.tsx` used a local `formatTime` function that showed `MM:SS` for durations less than an hour, but FR7 requires `HH:MM:SS` always.
-        *   **Attempt 1:** Identified that `frontend/MeditationApp/src/utils/timeFormatter.ts` contains `formatSecondsToHHMMSS` which correctly formats to `HH:MM:SS`.
-        *   **Solution:** Modified `src/components/Timer.tsx` to remove its local `formatTime` function and instead import and use `formatSecondsToHHMMSS` (aliased as `formatTime`). Initially, the import path was `../frontend/MeditationApp/src/utils/timeFormatter.ts`.
-    *   **Problem:** Metro bundler failed with `Error: Unable to resolve module ../../src/components/Timer from .../frontend/MeditationApp/src/screens/TimerScreen.tsx`.
-        *   **Attempt 1:** Analyzed import path in `TimerScreen.tsx`. It was `../../src/components/Timer`.
-        *   **Solution:** Corrected the import path in `frontend/MeditationApp/src/screens/TimerScreen.tsx` to `../../../../src/components/Timer` to accurately navigate from `frontend/MeditationApp/src/screens/` to the project root's `src/components/` directory.
-    *   **Problem:** Metro bundler failed with `Error: Unable to resolve module ../frontend/MeditationApp/src/utils/timeFormatter from .../src/components/Timer.tsx`.
-        *   **Attempt 1:** Analyzed import path in `Timer.tsx`. It was `../frontend/MeditationApp/src/utils/timeFormatter` (from previous step).
-        *   **Solution:** Corrected the import path in `src/components/Timer.tsx` to `../../frontend/MeditationApp/src/utils/timeFormatter` to accurately navigate from `src/components/` up to the project root, then into `frontend/MeditationApp/src/utils/`.
-*   [x] Elicit and define specific UI styling requirements from user for Timer screen (buttons, timer display, overall layout) - Ref: FR12.1 (new)
-    *   **Problem:** Needed concrete visual guidance for the Timer screen to ensure design matches user expectations.
-        *   **Attempt 1:** Asked the user for specific colours, fonts, and layout details.
-        *   **Solution:** User provided a reference mock-up (sunrise gradient background with star field, large centred timer text, and a glowing circular "Start" button). Adopted this as the definitive styling guideline.
-*   [x] Implement UI styling for Timer screen components based on defined requirements - Ref: FR12.1 (new)
-    *   **Problem:** Existing `TimerScreen` and `Timer` components used default `View`/`Button` styling, not matching the new mock-up.
-        *   **Attempt 1:** Considered adding `react-native-linear-gradient` for radial gradients but avoided extra native dependencies for now.
-        *   **Attempt 2:** Implemented a reusable `GlowButton` component using nested `View` elements, warm golden background colour, and shadow/elevation to simulate the glowing ring effect.
-        *   **Attempt 3:** Updated `Timer` component to replace `react-native` `Button`s with `GlowButton`s and adjusted font sizes/colours.
-        *   **Attempt 4:** Reworked `TimerScreen` to use `ImageBackground` with `src/screens/assets/timer_bg.png` placeholder, centring content and applying white text for contrast.
-        *   **Solution:** Styling now closely mirrors the provided mock-up; further refinements (e.g., exact gradient image asset and fine-tuned colours) can be handled by replacing the placeholder image or tweaking `GlowButton` colours.
-*   [x] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
-    *   **Problem:** Tests created for `AnalyticsScreen.tsx` (including navigation to it) require the screen to exist and the app to have a navigation setup. The `TimerScreen` also now uses `useNavigation` hook which was causing a runtime error: "Couldn't find a navigation object".
-        *   **Attempt 1:** Create a placeholder `AnalyticsScreen.tsx` file.
-        *   **Attempt 2:** Modify `frontend/MeditationApp/App.tsx` to include `NavigationContainer` from `@react-navigation/native` and a `createNativeStackNavigator` from `@react-navigation/native-stack`. Define routes for `TimerScreen` (initial) and `AnalyticsScreen`.
-        *   **Solution:** Root navigation is now set up in `App.tsx`, resolving the runtime error and preparing for `AnalyticsScreen` implementation.
-*   [x] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
-    *   **Problem:** Need to create the `AnalyticsScreen.tsx` component to satisfy the tests and provide the analytics UI.
-        *   **Attempt 1:** Created `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx`.
-        *   **Attempt 2:** Implemented state management for start/end dates, loading, error, and fetched data.
-        *   **Attempt 3:** Added `DateTimePicker` for date selection and `LineChart` from `react-native-svg-charts` for displaying daily meditation totals.
-        *   **Attempt 4:** Included summary statistics display and basic styling.
-        *   **Attempt 5:** Created a placeholder `fetchAnalyticsData` function in `frontend/MeditationApp/src/services/api.ts` for the screen to use.
-        *   **Attempt 6:** Corrected import path for `fetchAnalyticsData` in `AnalyticsScreen.tsx`.
-        *   **Solution:** `AnalyticsScreen.tsx` is now implemented with date pickers, a chart, summary display, and loading/error handling. It uses a placeholder API service. Some linter errors related to SVG type definitions remain as the user opted not to install them for now.
-*   [ ] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
-    *   **Problem:** The `fetchAnalyticsData` function in `frontend/MeditationApp/src/services/api.ts` was a placeholder returning mock data.
-        *   **Attempt 1:** Identified the need to use `axios` for the API call, retrieve the auth token using `getToken` from `src/utils/storage.ts`, and fetch `API_BASE_URL` from `react-native-config`.
-        *   **Solution:** Updated `frontend/MeditationApp/src/services/api.ts` to implement the actual `GET /api/analytics` call. This includes sending the `Authorization` header with the JWT, passing `from` and `to` date parameters, and robust error handling for API responses and network issues, adhering to `error-logging-guidelines.mdc`. The `AnalyticsScreen.tsx` already handles loading/error states and data transformation.
-    *   **Problem:** Backend API returned `404 Not Found` for `/api/analytics`.
-        *   **Attempt 1:** Checked `backend/src/server.ts` and found that `analyticsRouter` was not imported or mounted.
-        *   **Solution:** Updated `backend/src/server.ts` to import `analyticsRouter` from `./routes/analytics` and mount it with `app.use('/api/analytics', verifyAuthToken, analyticsRouter);`. Also fixed a linter/type issue in `backend/src/middleware/auth.ts` by ensuring `verifyAuthToken` has a void return type in error branches.
-    *   **Problem:** Backend API returned `400 Bad Request` with error `startDate.missing`.
-        *   **Attempt 1:** Identified that the frontend was sending query parameters as `from` and `to`, while the backend expected `startDate` and `endDate`.
-        *   **Solution:** Updated `frontend/MeditationApp/src/services/api.ts` to change the query parameter names in the `axios.get` call to `startDate: params.from` and `endDate: params.to`.
-    *   **Problem:** App crashed with "Uncaught Error: Cannot read property 'style' of undefined" in `Svg.js` related to `ViewPropTypes` and `YAxis` undefined, after API call was successful.
-        *   **Attempt 1:** Identified that `react-native-svg` was an old version (`7.2.1`).
-        *   **Solution:** Upgraded `react-native-svg` to the latest version (`npm install react-native-svg@latest`) and ran `cd ios && pod install && cd ..`. This resolved the crash and the Analytics screen now displays data correctly.
-*   [ ] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
-    *   **Problem:** In the 1-year view, the maximum-value label ("54m") was clipped by the right edge of the chart, cutting off the trailing "m".
-        *   **Attempt 1:** Added a dynamic horizontal offset in `MaxValueDecorator` when the peak was at an edge, shifting the text left or right. This alone didn't create enough space and the label was still cropped on some devices.
-        *   **Attempt 2 (Solution):** Introduced additional right-side padding by using a shared `chartContentInset` `{ left: 10, right: 20 }` applied to `LineChart`, `YAxis`, and `XAxis` in `AnalyticsScreen.tsx`. This extra inset ensures the label has breathing room and is fully visible across all ranges.
-    *   **Problem:** The Summary section in `AnalyticsScreen.tsx` displayed "Total Sessions" and "Adherence Rate" which are no longer required.
-        *   **Solution:** Modified `frontend/MeditationApp/src/screens/AnalyticsScreen.tsx` to remove "Total Sessions" and "Adherence Rate" from the rendered JSX in the Summary section. Also updated the `AnalyticsSummary` interface to remove `totalSessions` and `adherenceRate` properties.
-    *   **Problem:** The "Average Minutes/Day" in the analytics summary was calculated based on active days only, not the total days in the selected period.
-        *   **Attempt 1:** Modified `backend/src/routes/analytics.ts` to calculate `totalDaysInPeriod` (inclusive of start and end dates). The `averageMinutesPerDay` is now `totalMinutes / totalDaysInPeriod`.
-        *   **Attempt 2:** Removed `totalSessions` and `adherenceRate` from the backend response in `backend/src/routes/analytics.ts` as they are no longer used by the frontend.
-        *   **Attempt 3 (Correction):** Refined the calculation of `totalDaysInPeriod` in `backend/src/routes/analytics.ts` to be `(endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24))`. This correctly reflects the number of days in the interval `[startDate, endDate)` which aligns with how the frontend defines and displays the period (e.g., a 7-day period from '2023-01-01' to '2023-01-07' inclusive is represented by `startDate='2023-01-01'` and `endDate='2023-01-08'`).
-        *   **Solution:** Updated tests in `backend/src/routes/analytics.test.ts` to reflect the corrected calculation for `averageMinutesPerDay`

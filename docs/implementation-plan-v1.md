@@ -8,7 +8,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Set up `Supabase` project.
 *   [x] Implement `Supabase` Row Level Security (RLS) policies for `MeditationSessions` (users can only access their own data) - Ref: NF3, DB3
 *   [x] Set up `Supabase` Auth for Google Sign-In - Ref: FR1-FR6, DB3
-*   [ ] (Optional) Create a database view or SQL function to aggregate `MeditationSessions` by day for faster analytics queries (e.g., `daily_user_meditation_minutes`) - Ref: FR24
+*   [n/a] (Optional) Create a database view or SQL function to aggregate `MeditationSessions` by day for faster analytics queries (e.g., `daily_user_meditation_minutes`) - Ref: FR24 (Skipped per user)
 
 ## 2. Backend Tasks (`Node.js`/`TypeScript` on `Vercel`)
 *   [x] Set up `Node.js`/`TypeScript` project (`Express.js`).
@@ -21,6 +21,15 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Implement `GET /api/analytics` endpoint to return aggregated meditation stats - Ref: FR23, FR24, FR25
 *   [x] Write unit tests for email allow list functionality (TDD) - Ref: User Request
 *   [x] Implement email allow list for Google Sign-In (backend) - Ref: User Request
+*   [x] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
+    *   [x] **Weekly Summary Panel (Timer Screen):**
+        *   [x] Uncomment and verify data fetching logic for Weekly Summary in `TimerScreen.tsx` (ensure `date-fns` is installed and imported).
+        *   [x] Style `WeeklySummary.tsx` component (bar chart, titles, text, background) to match mockup design (dark theme, specific colors, "Last 7 sessions" title).
+        *   [x] Review and confirm "Average Minutes" calculation in `WeeklySummary.tsx` (e.g., average over 7 days vs. average per session).
+        *   [x] Add day-of-the-week labels (e.g., Mon, Tue) to the X-axis of the bar chart in `WeeklySummary.tsx`.
+    *   [x] **Analytics Screen:**
+        *   [x] Style Analytics screen components to meet any outstanding design requirements.
+*   [x] Add "Longest Streak" to Analytics screen summary (Backend & Frontend) - Ref: User Request
 
 ## 3. Frontend Tasks (React Native for iOS)
 *   [x] Set up React Native Project (targeting iOS initially).
@@ -50,15 +59,6 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
 *   [x] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
 *   [x] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
-*   [x] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
-    *   [x] **Weekly Summary Panel (Timer Screen):**
-        *   [x] Uncomment and verify data fetching logic for Weekly Summary in `TimerScreen.tsx` (ensure `date-fns` is installed and imported).
-        *   [x] Style `WeeklySummary.tsx` component (bar chart, titles, text, background) to match mockup design (dark theme, specific colors, "Last 7 sessions" title).
-        *   [x] Review and confirm "Average Minutes" calculation in `WeeklySummary.tsx` (e.g., average over 7 days vs. average per session).
-        *   [x] Add day-of-the-week labels (e.g., Mon, Tue) to the X-axis of the bar chart in `WeeklySummary.tsx`.
-    *   [x] **Analytics Screen:**
-        *   [x] Style Analytics screen components to meet any outstanding design requirements.
-*   [ ] Add "Longest Streak" to Analytics screen summary (Backend & Frontend) - Ref: User Request
 
 ## 4. Local Testing Tasks
 *   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
@@ -92,17 +92,25 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
             *   **UI State:** App should be in a logged-in state. Test session persistence across app restarts if implemented (Ref: FR6).
         6.  **(Optional) Negative Test Cases:** Consider testing with invalid accounts, network interruptions, or invalid tokens.
 *   [x] Test session recording flow (Start -> Pause -> Resume -> Stop -> Verify data in `Supabase`).
-*   [ ] Test handling of network errors during session save.
-*   [ ] Verify RLS policies prevent cross-user data access.
-*   [ ] Perform UI testing on target iOS versions/devices.
-*   [ ] Test Weekly Summary panel data accuracy against backend for last 7 days.
-*   [ ] Test Analytics screen range selector and chart data accuracy.
+*   [x] Test handling of network errors during session save. (User confirmed tested earlier)
+*   [n/a] Verify RLS policies prevent cross-user data access. (Skipped by user, n=1 user base)
+*   [n/a] Perform UI testing on target iOS versions/devices. (Skipped by user, primary user on modern device)
+*   [x] Test Weekly Summary panel data accuracy against backend for last 7 days.
+*   [x] Test Analytics screen range selector and chart data accuracy.
 
 ## 5. Deployment Tasks
-*   [ ] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2
-*   [ ] Deploy backend API to `Vercel`.
+*   [x] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2 (Vercel default Git integration sufficient for MVP)
+*   [x] Deploy backend API to `Vercel`.
 *   [ ] Set up TestFlight for iOS app distribution - Ref: DEP3
-*   [ ] Build and distribute iOS app via TestFlight.
+    *   [ ] Create new app in App Store Connect
+    *   [ ] Configure app information (name, bundle ID)
+    *   [ ] Set up TestFlight settings
+*   [ ] Build and distribute iOS app via TestFlight
+    *   [ ] Update bundle identifier in Xcode
+    *   [ ] Configure signing certificates
+    *   [ ] Build app for TestFlight
+    *   [ ] Upload build to App Store Connect
+    *   [ ] Submit for TestFlight review
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
 *   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).
 
