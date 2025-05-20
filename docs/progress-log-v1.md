@@ -132,10 +132,15 @@ Corresponds to implementation-plan-v1.md
         *   **Solution:** Added the Web Client ID was already present; root cause shifted to frontend accessing `userInfo.user` after SDK update, causing TypeError. Patched `AuthScreen.tsx` to safely derive `displayName` from `userInfo.data.user.*`. Sign-in flow now succeeds end-to-end and app navigates to Timer screen.
 *   [x] Test session recording flow (Start -> Pause -> Resume -> Stop -> Verify data in `Supabase`).
     *   **Solution:** End-to-end test complete. After running a full timer cycle and pressing Stop, the app received a 201 response and the new row is visible in `MeditationSessions` with correct `user_id`, `session_start_time`, `session_end_time`, and `duration_seconds`. Data persistence confirmed.
-*   [ ] Implement email allow list for Google Sign-In (backend) - Ref: User Request
+*   [x] Implement email allow list for Google Sign-In (backend) - Ref: User Request
     *   **Problem:** User wants to restrict sign-ups to a specific list of emails.
     *   **Attempt 1:** Modified `backend/src/routes/auth.ts` to check the authenticated user's email against a comma-separated list from the `ALLOWED_EMAILS` environment variable. If the email is not on the list, or if the variable is not set, a 403 Forbidden error is returned.
     *   **Solution:** The backend now checks `authResult.user.email` against `process.env.ALLOWED_EMAILS`.
+*   [x] Write unit tests for email allow list functionality (TDD) - Ref: User Request
+    *   **Problem:** Need to test the email allow list logic in `backend/src/routes/auth.ts`.
+    *   **Attempt 1:** Created `backend/tests/routes/auth.test.ts` using `supertest` and `vitest`.
+    *   **Attempt 2:** Mocked `handleGoogleSignIn` service and `jsonwebtoken` to control inputs and outputs for the route. Added tests for allowed emails, non-allowed emails, missing `ALLOWED_EMAILS` env var, missing user email in auth result, case insensitivity, and multiple emails in the allow list.
+    *   **Solution:** A comprehensive test suite for the email allow list in `backend/tests/routes/auth.test.ts` is now in place.
 *   [ ] Test handling of network errors during session save.
 *   [ ] Verify RLS policies prevent cross-user data access.
 *   [ ] Perform UI testing on target iOS versions/devices.
