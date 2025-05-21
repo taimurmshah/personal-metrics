@@ -26,6 +26,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
         *   [x] Uncomment and verify data fetching logic for Weekly Summary in `TimerScreen.tsx` (ensure `date-fns` is installed and imported).
         *   [x] Style `WeeklySummary.tsx` component (bar chart, titles, text, background) to match mockup design (dark theme, specific colors, "Last 7 days" title).
         *   [x] Review and confirm "Average Minutes" calculation in `WeeklySummary.tsx` (e.g., average over 7 days vs. average per session).
+        *   [x] Update "Average Minutes" to "Daily Average" in `WeeklySummary.tsx`.
         *   [x] Add day-of-the-week labels (e.g., Mon, Tue) to the X-axis of the bar chart in `WeeklySummary.tsx`.
     *   [x] **Analytics Screen:**
         *   [x] Style Analytics screen components to meet any outstanding design requirements.

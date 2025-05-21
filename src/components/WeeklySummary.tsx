@@ -99,12 +99,12 @@ const WeeklySummary: React.FC<WeeklySummaryProps> = ({ sessions }) => {
               ))}
             </View>
           </View>
-          <Text style={styles.averageText}>Average Minutes: {averageMinutes} min</Text>
+          <Text style={styles.averageText}>Daily Average: {averageMinutes} min</Text>
         </>
       ) : (
         <>
           <Text style={styles.noDataText}>No session data for this week.</Text>
-          <Text style={styles.averageText}>Average Minutes: 0 min</Text>
+          <Text style={styles.averageText}>Daily Average: 0 min</Text>
         </>
       )}
     </View>
