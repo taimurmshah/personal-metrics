@@ -22,4 +22,24 @@ export const formatSecondsToHHMMSS = (totalSeconds: number): string => {
   const formattedSeconds = String(seconds).padStart(2, '0');
 
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+};
+
+/**
+ * Formats a given number of minutes into Xh Ym string format.
+ * @param totalMinutes - The total number of minutes to format.
+ * @returns A string representing the time in Xh Ym format, or Ym if hours is 0.
+ */
+export const formatMinutesToHM = (totalMinutes: number): string => {
+  if (typeof totalMinutes !== 'number' || !isFinite(totalMinutes) || totalMinutes < 0) {
+    console.warn(`formatMinutesToHM received invalid input: ${totalMinutes}. Returning 0m.`);
+    return '0m';
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = Math.floor(totalMinutes % 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 }; 

@@ -66,7 +66,7 @@ const WeeklySummary: React.FC<WeeklySummaryProps> = ({ sessions }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Last 7 sessions</Text>
+      <Text style={styles.title}>Last 7 days</Text>
       {sessions && sessions.length > 0 ? (
         <>
           {/* Custom chart implementation with flexbox for guaranteed alignment */}

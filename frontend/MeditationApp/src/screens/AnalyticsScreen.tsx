@@ -5,6 +5,7 @@ import * as shape from 'd3-shape';
 import { Text as SvgText, G, Circle } from 'react-native-svg';
 import { fetchAnalyticsData } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
+import { formatMinutesToHM } from '../utils/timeFormatter';
 
 // Define interfaces for the data
 interface DailyTotal {
@@ -89,23 +90,28 @@ const AnalyticsScreen = () => {
     }
     setError(null);
     try {
-      const { startDate, endDate } = calculateDateRange(selectedRange);
+      const { startDate, endDate: apiQueryTargetDate } = calculateDateRange(selectedRange); // endDate is "tomorrow"
       
       // Format dates to YYYY-MM-DD string for the API
       const from = startDate.toISOString().split('T')[0];
-      const to = endDate.toISOString().split('T')[0];
+      const to = apiQueryTargetDate.toISOString().split('T')[0];
       
       const result = await fetchAnalyticsData({ from, to });
 
-      // Fill in all days in the range with zeros for missing days
+      // Determine the actual last day to display on the chart ("today")
+      const chartDisplayEndDate = new Date(apiQueryTargetDate);
+      chartDisplayEndDate.setDate(apiQueryTargetDate.getDate() - 1);
+
+      // Fill in all days in the range (up to "today") with zeros for missing days
       const allDates: string[] = [];
       const currentDate = new Date(startDate);
-      while (currentDate <= endDate) {
+      // Loop up to and including chartDisplayEndDate ("today")
+      while (currentDate <= chartDisplayEndDate) { 
         allDates.push(currentDate.toISOString().split('T')[0]);
         currentDate.setDate(currentDate.getDate() + 1);
       }
       
-      // Create an object with all dates initialized to 0 minutes
+      // Create an object with all dates (up to "today") initialized to 0 minutes
       const filledDailyTotals: Record<string, number> = allDates.reduce((acc, date) => {
         acc[date] = 0;
         return acc;
@@ -436,12 +442,16 @@ const AnalyticsScreen = () => {
           <Text style={styles.summaryTitle}>{getSummaryTitle(selectedRange)}</Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Total Minutes</Text>
-              <Text style={styles.summaryValue}>{data.summary.totalMinutes}</Text>
+              <Text style={styles.summaryLabel}>Total Time</Text>
+              <Text style={styles.summaryValue}>
+                {data ? formatMinutesToHM(data.summary.totalMinutes) : '-'}
+              </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Avg. Minutes/Day</Text>
-              <Text style={styles.summaryValue}>{data.summary.averageMinutesPerDay.toFixed(1)}</Text>
+              <Text style={styles.summaryLabel}>Daily Average</Text>
+              <Text style={styles.summaryValue}>
+                {data ? formatMinutesToHM(data.summary.averageMinutesPerDay) : '-'}
+              </Text>
             </View>
           </View>
           <View style={styles.summaryRow}>

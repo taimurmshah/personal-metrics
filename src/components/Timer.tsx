@@ -22,9 +22,10 @@ import GlowButton from './GlowButton';
 
 interface TimerProps {
   // onSessionComplete is handled by the useTimer hook now directly via its handleStop
+  onSessionSaved?: () => Promise<void>; 
 }
 
-const Timer: React.FC<TimerProps> = () => {
+const Timer: React.FC<TimerProps> = ({ onSessionSaved }) => {
   const {
     time, // Changed from seconds
     status, // Changed from isRunning/isPaused
@@ -33,7 +34,7 @@ const Timer: React.FC<TimerProps> = () => {
     handlePause, // Changed from pause
     handleResume, // Changed from resume
     handleStop, // Changed from stop
-  }: UseTimerReturn = useTimer();
+  }: UseTimerReturn = useTimer({ onSessionSaved });
 
   // The useTimer hook's handleStop now handles the logic internally,
   // including calling an onComplete callback if that pattern is maintained within the hook.

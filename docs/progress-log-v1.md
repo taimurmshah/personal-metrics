@@ -157,3 +157,12 @@ Corresponds to implementation-plan-v1.md
     *   **Problem:** Ensure the Analytics screen accurately displays data for all selected time ranges and that chart aggregations are correct.
     *   **Solution:** User created diverse test data in Supabase, verified API responses for various ranges (week, month, year, etc.), and confirmed the Analytics screen charts and summary statistics correctly reflected this data for each selected range.
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
+*   [x] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
+    *   **Problem:** Initial implementation did not handle loading/error states explicitly.
+        *   **Solution:** Added `isLoading` and `error` states to the component consuming the API. Displayed appropriate UI indicators (loading message, error message) based on these states.
+*   [x] Refresh Weekly Summary data on Timer screen after a session is successfully saved.
+    *   **Problem:** Weekly summary data on the Timer screen was not updating immediately after a new session was recorded and saved.
+        *   **Attempt 1:** Considered complex state management or event emitters.
+        *   **Solution:** Modified `TimerScreen.tsx` to extract its `loadWeeklyData` function. Passed this function as an `onSessionSaved` prop to the `Timer` component. The `Timer` component, in turn, passes it to the `useTimer` hook. The `useTimer` hook now calls `onSessionSaved` after a session is successfully saved to the backend, triggering a data refresh in `TimerScreen.tsx` and updating the `WeeklySummary` component.
+
+## 4. Local Testing Tasks

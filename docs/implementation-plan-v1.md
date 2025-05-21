@@ -24,11 +24,13 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Style Weekly Summary panel and Analytics screen based on design requirements - Ref: FR18, FR20
     *   [x] **Weekly Summary Panel (Timer Screen):**
         *   [x] Uncomment and verify data fetching logic for Weekly Summary in `TimerScreen.tsx` (ensure `date-fns` is installed and imported).
-        *   [x] Style `WeeklySummary.tsx` component (bar chart, titles, text, background) to match mockup design (dark theme, specific colors, "Last 7 sessions" title).
+        *   [x] Style `WeeklySummary.tsx` component (bar chart, titles, text, background) to match mockup design (dark theme, specific colors, "Last 7 days" title).
         *   [x] Review and confirm "Average Minutes" calculation in `WeeklySummary.tsx` (e.g., average over 7 days vs. average per session).
         *   [x] Add day-of-the-week labels (e.g., Mon, Tue) to the X-axis of the bar chart in `WeeklySummary.tsx`.
     *   [x] **Analytics Screen:**
         *   [x] Style Analytics screen components to meet any outstanding design requirements.
+        *   [x] Update "Total Minutes" to "Total Time" and format as Xh Ym (e.g., 4h 28m) in the Analytics summary pane.
+        *   [x] Update "Avg. Minutes/Day" to "Daily Average" and format as Xh Ym in the Analytics summary pane.
 *   [x] Add "Longest Streak" to Analytics screen summary (Backend & Frontend) - Ref: User Request
 
 ## 3. Frontend Tasks (React Native for iOS)
@@ -59,6 +61,7 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 *   [x] Write unit/integration tests for Analytics screen (chart rendering, range selector) (TDD) - Ref: FR20, FR21
 *   [x] Implement Analytics screen with range selector and chart (using `react-native-svg-charts` or similar) - Ref: FR20, FR21
 *   [x] Integrate API calls to `GET /api/analytics` and handle errors/loading states - Ref: FR22
+*   [x] Refresh Weekly Summary data on Timer screen after a session is successfully saved.
 
 ## 4. Local Testing Tasks
 *   [x] Test Google Sign-In flow end-to-end (React Native iOS -> Backend -> `Supabase`).
@@ -116,6 +119,4 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
 
 ## Implementation Details
 
-*   **Architecture:** React Native Frontend (targeting iOS), `Node.js`/`TypeScript`/`Express.js` Backend API, `Supabase` (`PostgreSQL`) Database.
-*   **Authentication:** Google OAuth handled via `Supabase` Auth is the preferred approach (Ref: DB3) to simplify backend logic. The backend will verify tokens forwarded by the React Native app.
-*   **API:** RESTful API hosted on `Vercel`. Key endpoint: `
+*   **Architecture:** React Native Frontend (targeting iOS), `Node.js`/`TypeScript`/`

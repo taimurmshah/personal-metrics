@@ -19,51 +19,50 @@ const TimerScreen: React.FC = () => {
   const [isLoadingWeeklySummary, setIsLoadingWeeklySummary] = useState<boolean>(true);
   const [weeklySummaryError, setWeeklySummaryError] = useState<string | null>(null);
 
+  const loadWeeklyData = useCallback(async () => {
+    setIsLoadingWeeklySummary(true);
+    setWeeklySummaryError(null);
+    try {
+      const today = new Date();
+      const startDate = formatISO(subDays(today, 6), { representation: 'date' }); // Start 6 days ago (for 7 total days)
+      const endDateForApi = formatISO(addDays(today, 1), { representation: 'date' }); // End date for API (exclusive)
+      
+      const apiResponse = await fetchAnalyticsData({ from: startDate, to: endDateForApi });
+
+      const dailyTotals: Record<string, number> = apiResponse.dailyTotals || {};
+      
+      const dateInterval = eachDayOfInterval({
+        start: parseISO(startDate),
+        end: today // up to and including today
+      });
+
+      const formattedSessions: SessionData[] = dateInterval.map((dateObj: Date) => {
+        const dateStr = formatISO(dateObj, { representation: 'date' });
+        const seconds = dailyTotals[dateStr] || 0; // Assuming dailyTotals provides seconds
+        return {
+          date: dateStr,
+          durationMinutes: Math.round(seconds / 60),
+        };
+      });
+
+      setWeeklySessionsData(formattedSessions);
+    } catch (error) {
+      console.error("Failed to load weekly summary data:", error);
+      setWeeklySummaryError("Failed to load summary.");
+      setWeeklySessionsData([]); // Clear data on error
+    } finally {
+      setIsLoadingWeeklySummary(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      const loadWeeklyData = async () => {
-        setIsLoadingWeeklySummary(true);
-        setWeeklySummaryError(null);
-        try {
-          const today = new Date();
-          const startDate = formatISO(subDays(today, 6), { representation: 'date' }); // Start 6 days ago (for 7 total days)
-          const endDateForApi = formatISO(addDays(today, 1), { representation: 'date' }); // End date for API (exclusive)
-          
-          const apiResponse = await fetchAnalyticsData({ from: startDate, to: endDateForApi });
-
-          const dailyTotals: Record<string, number> = apiResponse.dailyTotals || {};
-          
-          const dateInterval = eachDayOfInterval({
-            start: parseISO(startDate),
-            end: today // up to and including today
-          });
-
-          const formattedSessions: SessionData[] = dateInterval.map((dateObj: Date) => {
-            const dateStr = formatISO(dateObj, { representation: 'date' });
-            const seconds = dailyTotals[dateStr] || 0; // Assuming dailyTotals provides seconds
-            return {
-              date: dateStr,
-              durationMinutes: Math.round(seconds / 60),
-            };
-          });
-
-          setWeeklySessionsData(formattedSessions);
-          // setWeeklySessionsData([]); // Temporarily set to empty
-        } catch (error) {
-          console.error("Failed to load weekly summary data:", error);
-          setWeeklySummaryError("Failed to load summary.");
-          setWeeklySessionsData([]); // Clear data on error
-        } finally {
-          setIsLoadingWeeklySummary(false);
-        }
-      };
-
       loadWeeklyData();
 
       return () => {
         // Optional: cleanup if needed when screen loses focus
       };
-    }, [])
+    }, [loadWeeklyData])
   );
 
   const handleGoToAnalytics = () => {
@@ -85,7 +84,7 @@ const TimerScreen: React.FC = () => {
       <View style={styles.fullScreenContainer}>
         <SafeAreaView style={styles.safeContainer}>
           <View style={styles.contentContainer}>
-            <Timer />
+            <Timer onSessionSaved={loadWeeklyData} />
             {/* Weekly Summary panel acting as navigation trigger */}
             <Pressable onPress={handleGoToAnalytics} testID="weekly-summary-panel" style={styles.weeklySummaryContainer}>
               {isLoadingWeeklySummary ? (

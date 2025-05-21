@@ -15,7 +15,11 @@ export interface UseTimerReturn {
   handleStop: () => Promise<void>; // Made async due to API calls
 }
 
-export const useTimer = (): UseTimerReturn => {
+interface UseTimerProps {
+  onSessionSaved?: () => Promise<void>;
+}
+
+export const useTimer = ({ onSessionSaved }: UseTimerProps = {}): UseTimerReturn => {
   const [time, setTime] = useState(0); // Tracks total elapsed seconds for display
   const [status, setStatus] = useState<TimerStatus>('initial');
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -109,6 +113,9 @@ export const useTimer = (): UseTimerReturn => {
           await apiService.saveSession(sessionData, token);
           setSaveStatus('success');
           // Success is handled by apiService logging for now, or add specific log here
+          if (onSessionSaved) {
+            await onSessionSaved();
+          }
         }
       } catch (error) {
         setSaveStatus('error');
@@ -146,7 +153,7 @@ export const useTimer = (): UseTimerReturn => {
     sessionOverallStartTimeRef.current = 0;
     setStatus('initial'); 
 
-  }, [status]);
+  }, [status, onSessionSaved]);
 
   useEffect(() => {
     if (saveStatus === 'success' || saveStatus === 'error') {
