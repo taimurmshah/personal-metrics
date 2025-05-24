@@ -109,11 +109,11 @@ Based on the [prd_v1.md](./prd_v1.md). This plan outlines the steps to build the
     *   [ ] Create new app in App Store Connect
     *   [ ] Configure app information (name, bundle ID)
     *   [ ] Set up TestFlight settings
-*   [ ] Build and distribute iOS app via TestFlight
-    *   [ ] Update bundle identifier in Xcode
-    *   [ ] Configure signing certificates
-    *   [ ] Build app for TestFlight
-    *   [ ] Upload build to App Store Connect
+*   [x] Build and distribute iOS app via TestFlight
+    *   [x] Update bundle identifier in Xcode
+    *   [x] Configure signing certificates
+    *   [x] Build app for TestFlight
+    *   [x] Upload build to App Store Connect
     *   [ ] Submit for TestFlight review
 *   [ ] Monitor `Vercel` logs and `Supabase` usage.
 *   [ ] Prepare for App Store submission (icons, descriptions, etc. - may be post-MVP).

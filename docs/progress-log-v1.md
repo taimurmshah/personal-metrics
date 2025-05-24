@@ -166,3 +166,41 @@ Corresponds to implementation-plan-v1.md
         *   **Solution:** Modified `TimerScreen.tsx` to extract its `loadWeeklyData` function. Passed this function as an `onSessionSaved` prop to the `Timer` component. The `Timer` component, in turn, passes it to the `useTimer` hook. The `useTimer` hook now calls `onSessionSaved` after a session is successfully saved to the backend, triggering a data refresh in `TimerScreen.tsx` and updating the `WeeklySummary` component.
 
 ## 4. Local Testing Tasks
+
+## 5. Deployment Tasks
+*   [x] Configure CI/CD for backend deployment to `Vercel` - Ref: DEP1, DEP2 (Vercel default Git integration sufficient for MVP)
+*   [x] Deploy backend API to `Vercel`.
+*   [ ] Set up TestFlight for iOS app distribution - Ref: DEP3
+    *   [ ] Create new app in App Store Connect
+        *   **Problem:** Need to create the Meditation Tracker app in App Store Connect with proper configuration.
+            *   **Attempt 1:** Completed Xcode configuration with Bundle ID `com.taimurshah.MeditationTracker`, Display Name "Meditation Tracker", App Category "Health & Fitness", and portrait orientation settings.
+            *   **Solution:** App information in Xcode is now properly configured for TestFlight submission. Ready to create corresponding app in App Store Connect.
+    *   [x] Configure app information (name, bundle ID)
+    *   [ ] Set up TestFlight settings
+*   [ ] Build and distribute iOS app via TestFlight
+    *   [ ] Update bundle identifier in Xcode
+    *   [ ] Configure signing certificates
+    *   [ ] Build app for TestFlight
+        *   **Problem:** Xcode archiving failed due to missing app icons (specifically 120x120 and 180x180).
+            *   **Attempt 1:** Reviewed Xcode error messages indicating missing icon sizes.
+            *   **Solution:** Identified the required icon sizes as 120x120 (`icon-60@2x.png`) and 180x180 (`icon-60@3x.png`). User created these image files.
+            *   **Solution:** Copied the `icon-60@2x.png` and `icon-60@3x.png` files into the `frontend/MeditationApp/ios/MeditationApp/Images.xcassets/AppIcon.appiconset/` directory.
+            *   **Solution:** Verified in Xcode that the `AppIcon` asset catalog correctly displayed the newly added 60pt @2x and @3x icons.
+        *   **Problem:** Xcode archiving failed due to `Info.plist` missing `CFBundleIconName` or incorrect App Icon source.
+            *   **Attempt 1:** Checked `Info.plist` and Xcode General settings.
+            *   **Solution:** Confirmed in Xcode's "General" tab for the app target that "App Icons Source" under "App Icons and Launch Screen" was correctly set to use the "AppIcon" asset catalog. This implicitly sets `CFBundleIconName`.
+        *   **Problem:** Xcode archiving failed with errors related to "Debug Symbols" (dSYMs) for Hermes.
+            *   **Attempt 1:** Reviewed Xcode error messages pointing to dSYM issues.
+            *   **Solution:** In Xcode Build Settings for the "Release" configuration:
+                *   Set "Debug Information Format" to "DWARF with dSYM File".
+                *   Set "Enable Bitcode" to "No".
+        *   **Problem:** Potential stale build artifacts causing persistent issues.
+            *   **Attempt 1:** Clear Xcode's derived data and CocoaPods cache.
+            *   **Solution:** Ran `rm -rf ~/Library/Developer/Xcode/DerivedData` in terminal.
+            *   **Solution:** Ran `cd frontend/MeditationApp/ios && pod deintegrate && pod install --repo-update` in terminal.
+        *   **Problem:** After resolving icon and build setting issues, archive uploaded to App Store Connect, but a warning "Upload Symbols Failed" for Hermes framework appeared.
+            *   **Attempt 1:** Analyzed the warning message.
+            *   **Solution:** Determined this specific warning for Hermes dSYMs is a known quirk and generally not a blocker for app distribution via TestFlight or App Store. User decided to proceed without further investigation into Hermes symbols for now.
+    *   [ ] Upload build to App Store Connect
+    *   [ ] Submit for TestFlight review
+*   [ ] Monitor `Vercel` logs and `Supabase` usage.

@@ -1,4 +1,10 @@
 {
   "name": "MeditationApp",
-  "displayName": "MeditationApp"
+  "displayName": "Meditation Tracker",
+  "ios": {
+    "bundleIdentifier": "com.taimurshah.MeditationTracker"
+  },
+  "android": {
+    "package": "com.taimurshah.meditationtracker"
+  }
 }
