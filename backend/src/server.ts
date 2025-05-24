@@ -8,6 +8,7 @@ import { verifyAuthToken } from './middleware/auth'; // Import auth middleware i
 // Load environment variables from .env file
 dotenv.config(); 
 
+// Server setup - Updated to use new ALLOWED_EMAILS env var
 const app = express();
 const port = process.env.PORT || 3000;
 

@@ -49,6 +49,13 @@ const AuthScreen: React.FC = () => {
       const userInfo: GoogleUser = await GoogleSignin.signIn();
       console.log('Google Sign-In Success. User Info:', userInfo);
 
+      // Handle cancellation case
+      if (userInfo.type === 'cancelled') {
+        console.log('User cancelled Google Sign-In');
+        Alert.alert('Sign-In Cancelled', 'You cancelled the Google Sign-In process.');
+        return;
+      }
+
       if (!userInfo.data?.idToken) {
         console.error('Error: idToken missing from userInfo.data. Full userInfo:', JSON.stringify(userInfo, null, 2));
         throw new Error('Google Sign-In succeeded but idToken is missing from data.');
